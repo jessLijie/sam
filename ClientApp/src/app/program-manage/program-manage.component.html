@@ -1,0 +1,435 @@
+<div class="filter-container">
+  <mat-form-field class="custom-mat-form-field" appearance="fill">
+    <mat-label>Select Faculty</mat-label>
+    <mat-select [(value)]="selectedFaculty">
+      <mat-option
+        *ngFor="let faculty of faculties"
+        [value]="faculty.facultyCode"
+      >
+        {{ faculty.faculty }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button
+    mat-icon-button
+    class="clear-button"
+    *ngIf="selectedFaculty"
+    (click)="clearFilter()"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <button mat-fab extended class="add-button" (click)="openCreateModal()">
+    Requirement
+    <mat-icon>add</mat-icon>
+  </button>
+
+  <button mat-fab extended class="manage-button" (click)="openSubjectModal()">
+    Course
+    <mat-icon>edit</mat-icon>
+  </button>
+</div>
+
+<mat-accordion *ngIf="selectedFaculty">
+  <mat-expansion-panel disabled>
+    <mat-expansion-panel-header style="color: #9d9d9d">
+      💡 Click to expand and view specific entry requirement
+    </mat-expansion-panel-header>
+  </mat-expansion-panel>
+  <mat-expansion-panel
+    *ngFor="let program of getProgramsForFaculty()"
+    hideToggle
+  >
+    <mat-expansion-panel-header (click)="selectProgram(program.code)">
+      <mat-panel-title> {{ program.code }} </mat-panel-title>
+      <mat-panel-description style="color: black">
+        {{ program.name }}
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+    <table
+      mat-table
+      [dataSource]="specialRequirements[program.code]"
+      class="mat-elevation-z8"
+    >
+      <ng-container matColumnDef="graduate_type">
+        <th mat-header-cell *matHeaderCellDef>Category</th>
+        <td mat-cell *matCellDef="let element">
+          <span
+            class="category-tag"
+            [ngClass]="getCategoryClass(element.graduate_type)"
+          >
+            {{ element.graduate_type }}
+          </span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="requirement">
+        <th mat-header-cell *matHeaderCellDef>Special Requirement</th>
+        <td mat-cell *matCellDef="let element">{{ element.subject }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="grade">
+        <th mat-header-cell *matHeaderCellDef style="width: 30%">
+          Minimum Grade
+        </th>
+        <td mat-cell *matCellDef="let element; let rowIndex = index">
+          <ng-container
+            *ngIf="editingSpecialRowIndex === rowIndex; else gradeView"
+          >
+            <input matInput [(ngModel)]="updatedSpecialGrade" />
+          </ng-container>
+          <ng-template #gradeView>{{ element.grade }}</ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let element; let rowIndex = index">
+          <button
+            mat-button
+            *ngIf="editingSpecialRowIndex === rowIndex; else editButton"
+            (click)="saveSpecialChanges(program.code, rowIndex)"
+          >
+            <mat-icon>check</mat-icon>
+          </button>
+          <ng-template #editButton>
+            <button
+              mat-button
+              (click)="
+                startEditingSpecial(program.code, rowIndex, element.grade)
+              "
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+          </ng-template>
+          <button mat-button (click)="confirmDelete(element.id, program.code)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </mat-expansion-panel>
+</mat-accordion>
+
+<table
+  mat-table
+  matSort
+  [dataSource]="generalRequirement"
+  class="mat-elevation-z8"
+  #generalSort="matSort"
+>
+  <ng-container matColumnDef="graduate_type">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+    <td mat-cell *matCellDef="let element">
+      <span
+        class="category-tag"
+        [ngClass]="getCategoryClass(element.graduate_type)"
+      >
+        {{ element.graduate_type }}
+      </span>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="requirement">
+    <th mat-header-cell *matHeaderCellDef>General Requirement</th>
+    <td mat-cell *matCellDef="let element">{{ element.subject }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="grade">
+    <th mat-header-cell *matHeaderCellDef style="width: 30%">Minimum Grade</th>
+    <td mat-cell *matCellDef="let element; let generalRowIndex = index">
+      <ng-container *ngIf="editingRowIndex === generalRowIndex; else gradeView">
+        <input matInput [(ngModel)]="updatedGrade" />
+      </ng-container>
+      <ng-template #gradeView>{{ element.grade }}</ng-template>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="action">
+    <th mat-header-cell *matHeaderCellDef>Actions</th>
+    <td mat-cell *matCellDef="let element; let rowIndex = index">
+      <button
+        mat-button
+        *ngIf="editingRowIndex === rowIndex; else editButton"
+        (click)="saveChanges(rowIndex)"
+      >
+        <mat-icon>check</mat-icon>
+      </button>
+      <ng-template #editButton>
+        <button mat-button (click)="startEditing(rowIndex, element.grade)">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </ng-template>
+      <button mat-button (click)="confirmDelete(element.id)" style="color: red">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+</table>
+
+<!-- Entry Requirement Edit -->
+<div *ngIf="isCreateModalOpen" class="modal-overlay">
+  <div class="modal-content">
+    <h4>Add Entry Requirement</h4>
+    <form [formGroup]="createForm">
+      <!-- Category Selection -->
+      <mat-form-field appearance="fill">
+        <mat-label>Category</mat-label>
+        <mat-select
+          [(ngModel)]="selectedCategory"
+          (selectionChange)="onCategoryChange()"
+          formControlName="graduate_type"
+        >
+          <mat-option *ngFor="let category of categories" [value]="category">
+            {{ category }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Subject Selection -->
+      <mat-form-field *ngIf="selectedCategory" appearance="fill">
+        <mat-label>Subject</mat-label>
+        <mat-select
+          formControlName="subject"
+          [(ngModel)]="selectedSubject"
+          (selectionChange)="onSubjectChange()"
+        >
+          <mat-option
+            *ngFor="let subject of subjects"
+            [value]="subject.subjectName"
+          >
+            {{ subject.subjectName }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Category Selection -->
+      <!-- <mat-form-field appearance="fill">
+        <mat-label>Category</mat-label>
+        <mat-select
+          (selectionChange)="onTypeChangeSubject($event)"
+          formControlName="graduate_type"
+        >
+          <mat-option value="SPM">SPM</mat-option>
+          <mat-option value="STPM">STPM</mat-option>
+          <mat-option value="Diploma">Diploma</mat-option>
+          <mat-option value="Matriculation">Matriculation</mat-option>
+        </mat-select>
+      </mat-form-field> -->
+
+      <!-- SPM Subject Selection (Based on Requirement Type) -->
+      <!-- <mat-form-field *ngIf="isSPM" appearance="fill">
+        <mat-label>Subject</mat-label>
+        <mat-select formControlName="subject">
+          <mat-option value="Bahasa Melayu">Bahasa Melayu</mat-option>
+          <mat-option value="Bahasa Cina">Bahasa Cina</mat-option>
+          <mat-option value="Bahasa Ingerris">Bahasa Ingerris</mat-option>
+          <mat-option value="Sejarah">Sejarah</mat-option>
+          <mat-option value="Pendidikan Moral">Pendidikan Moral</mat-option>
+          <mat-option value="Physics">Physics</mat-option>
+          <mat-option value="Chemistry">Chemistry</mat-option>
+          <mat-option value="Biology">Biology</mat-option>
+          <mat-option value="Mathematics">Mathematics</mat-option>
+          <mat-option value="Additional Mathematics"
+            >Additional Mathematics</mat-option
+          >
+        </mat-select>
+      </mat-form-field> -->
+
+      <!-- STPM Subject Selection (Based on Requirement Type) -->
+      <!-- <mat-form-field *ngIf="isSTPM" appearance="fill">
+        <mat-label>Subject</mat-label>
+        <mat-select formControlName="subject">
+          <mat-option value="Mathematics (M)">Mathematics (M)</mat-option>
+          <mat-option value="Mathematics (T)">Mathematics (T)</mat-option>
+          <mat-option value="Physics">Physics</mat-option>
+          <mat-option value="Chemistry">Chemistry</mat-option>
+          <mat-option value="Biology">Biology</mat-option>
+          <mat-option value="Pengajian Am">Pengajian Am</mat-option>
+          <mat-option value="MUET">MUET</mat-option>
+        </mat-select>
+      </mat-form-field> -->
+
+      <!-- Matriculation Subject Selection (Based on Requirement Type) -->
+      <!-- <mat-form-field *ngIf="isMatriculation" appearance="fill">
+        <mat-label>Subject</mat-label>
+        <mat-select formControlName="subject">
+          <mat-option value="Physics">Physics</mat-option>
+          <mat-option value="Chemistry">Chemistry</mat-option>
+          <mat-option value="Biology">Biology</mat-option>
+          <mat-option value="MUET">MUET</mat-option>
+        </mat-select>
+      </mat-form-field> -->
+
+      <!-- Diploma Subject Selection (Based on Requirement Type) -->
+      <!-- <mat-form-field *ngIf="isDiploma" appearance="fill">
+        <mat-label>Subject</mat-label>
+        <mat-select formControlName="subject">
+          <mat-option value="MUET">MUET</mat-option>
+        </mat-select>
+      </mat-form-field> -->
+
+      <!-- Grade Input -->
+      <mat-form-field *ngIf="selectedCategory" appearance="fill">
+        <mat-label>Grade</mat-label>
+        <mat-select [(ngModel)]="selectedGrade" formControlName="grade">
+          <mat-option *ngFor="let grade of grades" [value]="grade">
+            {{ grade }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Type Selection (General/Special) -->
+      <mat-form-field appearance="fill">
+        <mat-label>Type</mat-label>
+        <mat-select
+          formControlName="requirement_type"
+          (selectionChange)="onTypeChange($event)"
+        >
+          <mat-option value="general">General</mat-option>
+          <mat-option value="special">Special</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Faculty Selection for Special Type -->
+      <mat-form-field *ngIf="isSpecialSelected" appearance="fill">
+        <mat-label>Faculty</mat-label>
+        <mat-select formControlName="faculty">
+          <mat-option
+            *ngFor="let faculty of faculties"
+            [value]="faculty.facultyCode"
+          >
+            {{ faculty.faculty }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Program Selection for Special Type -->
+      <mat-form-field
+        *ngIf="isSpecialSelected && createForm.value.faculty"
+        appearance="fill"
+      >
+        <mat-label>Program</mat-label>
+        <mat-select formControlName="program_code">
+          <mat-option
+            *ngFor="let program of getProgramsForFacultyDropdown()"
+            [value]="program.code"
+          >
+            {{ program.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Display error message if any -->
+      <div
+        *ngIf="errorMessage"
+        style="color: red; font-size: 14px; margin-top: 10px"
+      >
+        {{ errorMessage }}
+      </div>
+
+      <!-- Update and Cancel Buttons -->
+      <br />
+      <div style="float: right">
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="submitEntry()"
+        >
+          Submit
+        </button>
+        <button
+          mat-raised-button
+          color="warn"
+          type="button"
+          (click)="closeCreateModal()"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Subject Modal -->
+<div *ngIf="isSubjectModalOpen" class="modal-overlay-sub">
+  <div class="modal-content-sub">
+
+    <div class="modal-body-sub">
+
+
+      <!-- Add Subject Form -->
+      <h4>Add Subject</h4>
+      <form [formGroup]="subjectForm">
+        <mat-form-field>
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="category">
+            <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Subject Name</mat-label>
+          <input matInput type="text" formControlName="subjectName" />
+        </mat-form-field>
+
+        <div class="modal-actions">
+          <button mat-raised-button color="warn" type="button" (click)="closeSubjectModal()" class="subject-button">
+            Cancel
+          </button>
+          <button mat-raised-button color="primary" type="button" (click)="saveSubject()" [disabled]="subjectForm.invalid" class="subject-button">
+            Add
+          </button>
+        </div>
+      </form>
+      <button mat-raised-button color="accent" (click)="toggleViewSubjects()" class="subject-button">
+        <mat-icon>{{ showSubjects ? "visibility_off" : "visibility" }}</mat-icon>
+        {{ showSubjects ? "Hide Subjects" : "View All Subjects" }}
+      </button>
+      <div *ngIf="showSubjects" class="table-container-sub">
+        <table mat-table [dataSource]="subjectDataSource" matSort class="full-width-table"  #subjectSort="matSort">
+
+          <!-- Category Column with Sorting -->
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+            <td mat-cell *matCellDef="let subject">
+              <span class="category-tag" [ngClass]="getCategoryClass(subject.category)">
+                {{ subject.category }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Subject Name Column -->
+          <ng-container matColumnDef="subjectName">
+            <th mat-header-cell *matHeaderCellDef>Subject Name</th>
+            <td mat-cell *matCellDef="let subject">{{ subject.subjectName }}</td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let subject">
+              <button mat-icon-button color="warn" (click)="deleteSubject(subject.id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <!-- Table Headers & Rows -->
+          <thead>
+            <tr mat-header-row *matHeaderRowDef="displayedCourseColumns"></tr>
+          </thead>
+          <tbody>
+            <tr mat-row *matRowDef="let row; columns: displayedCourseColumns;"></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,19 @@
+<mat-form-field appearance="fill" >
+  <mat-label>Send to</mat-label>
+  <mat-select [(ngModel)]="selectedEmail">
+    <mat-option value="jess.moon9@gmail.com">Dr. Adila</mat-option>
+    <mat-option value="constance.moon6@gmail.com">Dr. Junaidi</mat-option>
+    <mat-option value="constance.moon9@gmail.com">Prof Wan</mat-option>
+    <mat-option value="wongjie@graduate.utm.my">Kak Ezra</mat-option>
+  </mat-select>
+</mat-form-field>
+
+<mat-form-field appearance="fill" hidden>
+  <mat-label>Message</mat-label>
+  <textarea matInput [(ngModel)]="emailMessage"></textarea>
+</mat-form-field>
+
+<button mat-fab extended class="send-button" (click)="sendEmail()">
+  Send
+  <mat-icon>mail</mat-icon>
+</button>
