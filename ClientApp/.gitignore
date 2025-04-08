@@ -4,7 +4,7 @@
 /dist-server
 /tmp
 /out-tsc
-/.angular/cache
+.angular/cache
 
 # dependencies
 /node_modules
