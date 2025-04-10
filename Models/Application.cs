@@ -13,19 +13,14 @@ namespace sam.Models{
         [Required]
         public string? PreUType { get; set; }      
 
-        [Required]
         public string? ApplicationStatus { get; set; }
 
-        [Required]
         public string? FirstChoice { get; set; }
 
-         [Required]
         public string? SecondChoice { get; set; }
 
-         [Required]
         public string? ThirdChoice { get; set; }
 
-        [Required]
         public string? AppliedProgram { get; set; }
 
 

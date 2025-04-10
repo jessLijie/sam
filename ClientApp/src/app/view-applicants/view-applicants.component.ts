@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,26 +21,36 @@ export interface Applicants {
   applied_program: string;
 }
 
+export interface Faculty {
+  facultyCode: string;
+  faculty: string;
+}
+
+export interface Program {
+  code: string;
+  name: string;
+}
+
 @Component({
   selector: 'app-view-applicants',
   standalone: true,
   templateUrl: './view-applicants.component.html',
   styleUrls: ['./view-applicants.component.css'],
-  imports:[
-   CommonModule,
-       MatTableModule,
-       MatSortModule,
-       MatFormFieldModule,
-       MatSelectModule,
-       MatInputModule,
-       FormsModule,
-       MatIconModule,
-       MatExpansionModule,
-       MatButtonModule,
-       MatSnackBarModule,
-       ReactiveFormsModule,
-       MatChipsModule,
-       MatBadgeModule
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatSortModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
+    FormsModule,
+    MatIconModule,
+    MatExpansionModule,
+    MatButtonModule,
+    MatSnackBarModule,
+    ReactiveFormsModule,
+    MatChipsModule,
+    MatBadgeModule
 
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,7 +64,12 @@ export class ViewApplicantsComponent implements OnInit {
   private apiUrl = 'https://localhost:7108/api/Application';
   // For the add modal:
   public isAddModalOpen = false;
+  public isScanModalOpen = false;
   public addForm: FormGroup;
+  programs: { [key: string]: Program[] } = {};
+  faculties: Faculty[] = [];
+  spmPdfFile: File | null = null;
+  preUPdfFile: File | null = null;
 
   // Subject option lists
   spmSubjectOptions = [
@@ -94,50 +109,52 @@ export class ViewApplicantsComponent implements OnInit {
     'MUET'
   ];
 
-  programs: { [key: string]: { code: string; name: string }[] } = {
-    fc: [
-      { code: 'UT6481001', name: 'Software Engineering' },
-      { code: 'UT6481002', name: 'Data Engineering' },
-      { code: 'UT6481003', name: 'Bioinformatics' },
-      { code: 'UT6481004', name: 'Network and Cybersecurity' },
-      { code: 'UT6481005', name: 'Graphics and Multimedia' },
-    ],
-    fkm: [
-      { code: 'UT6521001', name: 'Pure Mechanics' },
-      { code: 'UT6521003', name: 'Manufacturing' },
-      { code: 'UT6521004', name: 'Industrial' },
-      { code: 'UT6525001', name: 'Aerospace' },
-      { code: 'UT6525002', name: 'Automotive' },
-      { code: 'UT6525003', name: 'Offshore' },
-    ],
-    fke: [
-      { code: 'UT6522002', name: 'Electrical Engineering' },
-      { code: 'UT6523001', name: 'Electronic Engineering' },
-      { code: 'UT6523002', name: 'Mechatronics Engineering' },
-      { code: 'UT6523003', name: 'Biomedical Engineering' },
-    ],
-  };
+  // programs: { [key: string]: { code: string; name: string }[] } = {
+  //   fc: [
+  //     { code: 'UT6481001', name: 'Software Engineering' },
+  //     { code: 'UT6481002', name: 'Data Engineering' },
+  //     { code: 'UT6481003', name: 'Bioinformatics' },
+  //     { code: 'UT6481004', name: 'Network and Cybersecurity' },
+  //     { code: 'UT6481005', name: 'Graphics and Multimedia' },
+  //   ],
+  //   fkm: [
+  //     { code: 'UT6521001', name: 'Pure Mechanics' },
+  //     { code: 'UT6521003', name: 'Manufacturing' },
+  //     { code: 'UT6521004', name: 'Industrial' },
+  //     { code: 'UT6525001', name: 'Aerospace' },
+  //     { code: 'UT6525002', name: 'Automotive' },
+  //     { code: 'UT6525003', name: 'Offshore' },
+  //   ],
+  //   fke: [
+  //     { code: 'UT6522002', name: 'Electrical Engineering' },
+  //     { code: 'UT6523001', name: 'Electronic Engineering' },
+  //     { code: 'UT6523002', name: 'Mechatronics Engineering' },
+  //     { code: 'UT6523003', name: 'Biomedical Engineering' },
+  //   ],
+  // };
 
-  constructor( private fb: FormBuilder,
+  constructor(private fb: FormBuilder,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private snackBar: MatSnackBar,
   ) {
-      this.addForm = this.fb.group({
-        name: ['', Validators.required],
-        preUType: ['', Validators.required],
-        faculty: ['', Validators.required],
-        program_code: ['', Validators.required],
-        icNumber: ['', Validators.required],
-        address: [''],
-        gender: [''],
-        spmResults: this.fb.array([], Validators.required),
-        preUResults: this.fb.array([])
-      });
-    }
+    this.addForm = this.fb.group({
+      name: ['', Validators.required],
+      preUType: ['', Validators.required],
+      faculty: ['', Validators.required],
+      program_code: ['', Validators.required],
+      icNumber: ['', Validators.required],
+      address: [''],
+      gender: [''],
+      spmResults: this.fb.array([], Validators.required),
+      preUResults: this.fb.array([])
+    });
+  }
 
   ngOnInit(): void {
     this.fetchApplicants();
+    this.fetchCourses();
+    this.fetchFaculties();
   }
 
   fetchApplicants(): void {
@@ -160,11 +177,29 @@ export class ViewApplicantsComponent implements OnInit {
     return code;
   }
 
+  fetchFaculties(): void {
+    this.http.get<Faculty[]>('https://localhost:7108/api/Course/faculties')
+      .subscribe(response => {
+        this.faculties = response;
+      }, error => {
+        console.error('Error fetching faculties:', error);
+      });
+  }
+
+  fetchCourses(): void {
+    this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
+      .subscribe(response => {
+        this.programs = response;
+      }, error => {
+        console.error('Error fetching courses:', error);
+      });
+  }
+
 
   openPreUResultModal(application: Applicants): void {
     this.http.get<any>(`${this.apiUrl}/${application.id}`).subscribe({
       next: (data) => {
-        this.modalTitle = data.name +"'s "+ data.preUType +" Result";
+        this.modalTitle = data.name + "'s " + data.preUType + " Result";
         try {
           this.modalContent = JSON.parse(data.preUResult);
         } catch (e) {
@@ -181,7 +216,7 @@ export class ViewApplicantsComponent implements OnInit {
   openSpmResultModal(application: Applicants): void {
     this.http.get<any>(`${this.apiUrl}/${application.id}`).subscribe({
       next: (data) => {
-        this.modalTitle =data.name +"'s SPM Result";
+        this.modalTitle = data.name + "'s SPM Result";
         try {
           this.modalContent = JSON.parse(data.spmResult);
         } catch (e) {
@@ -231,6 +266,54 @@ export class ViewApplicantsComponent implements OnInit {
     return this.addForm.get('preUResults') as FormArray;
   }
 
+  @ViewChild('spmFileInput') spmFileInput!: ElementRef;
+  scanSpmResult(): void {
+    // this.spmResults.push(this.fb.group({
+    //   subject: ['', Validators.required],
+    //   grade: ['', Validators.required]
+    // }));
+    this.spmFileInput.nativeElement.click(); // triggers the file input
+  }
+
+  scanPreUResult(): void {
+    this.preUResults.push(this.fb.group({
+      subject: ['', Validators.required],
+      grade: ['', Validators.required]
+    }));
+  }
+
+  onSpmFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post<any>(`${this.apiUrl}/scan/spm`, formData,{ responseType: 'text' as 'json' }).subscribe({
+      next: (res) => {
+        // console.log('Extracted SPM:', res);
+        // const results = res as Record<string, string>;
+        // Object.entries(results).forEach(([subject, grade]) => {
+        //   this.spmResults.push(
+        //     this.fb.group({
+        //       subject: [subject, Validators.required],
+        //       grade: [grade as string, Validators.required]
+        //     })
+        //   );
+        // });
+        console.log('Extracted SPM Text:', res);
+        const extractedText = res as string;
+        console.log(extractedText);
+      },
+      error: (err) => {
+        console.error('Error scanning SPM:', err);
+        alert('Failed to scan SPM file. Please try again.');
+      }
+    });
+  }
+
+
   addSpmResult(): void {
     this.spmResults.push(this.fb.group({
       subject: ['', Validators.required],
@@ -244,6 +327,7 @@ export class ViewApplicantsComponent implements OnInit {
       grade: ['', Validators.required]
     }));
   }
+
 
   removeSpmResult(index: number): void {
     this.spmResults.removeAt(index);
@@ -344,8 +428,17 @@ export class ViewApplicantsComponent implements OnInit {
     this.isAddModalOpen = true;
   }
 
+  openScanModal(): void {
+    this.isScanModalOpen = true;
+  }
+
   closeAddModal(): void {
     this.isAddModalOpen = false;
+  }
+
+
+  closeScanModal(): void {
+    this.isScanModalOpen = false;
   }
 
   deleteApplicant(id: number): void {
@@ -376,3 +469,4 @@ export class ViewApplicantsComponent implements OnInit {
   }
 
 }
+

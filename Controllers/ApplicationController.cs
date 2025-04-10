@@ -2,6 +2,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using sam.Data;
 using sam.Models;
+using UglyToad.PdfPig;
+using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Text;
+using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas.Parser;
+using iText.Kernel.Pdf.Canvas.Parser.Listener;
+using PdfiumViewer;
+using Tesseract;
+using System.Drawing;
 
 namespace sam.Controllers
 {
@@ -61,7 +71,8 @@ namespace sam.Controllers
                 SpmResult = input.SpmResult,
                 PreUResult = input.PreUResult,
                 PreUType = input.PreUType,
-                AppliedProgram = input.Program_code
+                AppliedProgram = input.Program_code,
+                ApplicationStatus = "pending"
             };
 
             _context.Applications.Add(application);
@@ -69,7 +80,7 @@ namespace sam.Controllers
 
             var applicant = new Applicant
             {
-                Name = input.Name, 
+                Name = input.Name,
                 IcNumber = input.IcNumber,
                 Address = input.Address,
                 Gender = input.Gender,
@@ -80,6 +91,122 @@ namespace sam.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetApplication), new { id = application.Id }, application);
+        }
+
+        [HttpPost("scan/spm")]
+        public async Task<IActionResult> ScanSPM(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            // use uglyToad
+            // var results = new Dictionary<string, string>();
+
+            // using (var stream = file.OpenReadStream())
+            // using (var pdf = PdfDocument.Open(stream))
+            // {
+            //     foreach (var page in pdf.GetPages())
+            //     {
+            //         string text = page.Text;
+
+            //         // Pattern: subject name followed by grade (e.g. BAHASA MELAYU A+)
+            //         var regex = new Regex(@"([A-Z\s]+)\s+(A\+|A|A\-|B\+|B|B\-|C\+|C|C\-|D\+|D|E|G)", RegexOptions.IgnoreCase);
+
+            //         foreach (Match match in regex.Matches(text))
+            //         {
+            //             string subject = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(match.Groups[1].Value.Trim().ToLower());
+            //             string grade = match.Groups[2].Value.ToUpper();
+
+            //             if (!results.ContainsKey(subject))
+            //                 results[subject] = grade;
+            //         }
+            //     }
+            // }
+
+            // return Ok(results);
+
+            // extract everything 
+            // var extractedText = new StringBuilder();
+
+            // using (var stream = file.OpenReadStream())
+            // using (var pdf = PdfDocument.Open(stream))
+            // {
+            //     foreach (var page in pdf.GetPages())
+            //     {
+            //         string text = page.Text;
+            //         extractedText.AppendLine(text);
+            //     }
+            // }
+
+            // return Ok(extractedText.ToString());
+
+            // use iTextSharp
+            // var extractedText = new StringBuilder();
+
+            // using (var stream = file.OpenReadStream())
+            // using (var pdfReader = new PdfReader(stream))
+            // using (var pdfDocument = new iText.Kernel.Pdf.PdfDocument(pdfReader))
+            // {
+            //     // Iterate through all the pages in the PDF
+            //     for (int i = 1; i <= pdfDocument.GetNumberOfPages(); i++)
+            //     {
+            //         var page = pdfDocument.GetPage(i);
+            //         var strategy = new SimpleTextExtractionStrategy();
+            //         var text = PdfTextExtractor.GetTextFromPage(page, strategy);
+            //         extractedText.AppendLine(text);  // Add the extracted text from the page
+            //     }
+            // }
+
+            // // Return the extracted text as plain text in the response
+            // return Content(extractedText.ToString(), "text/plain");
+
+            // use Tesseract
+            var extractedText = new StringBuilder();
+            bool isTextBasedPdf = false;
+
+            try
+            {
+                using (var stream = file.OpenReadStream())
+                {
+                    var pdfDocument = PdfiumViewer.PdfDocument.Load(stream);
+
+                    for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
+                    {
+                        string pageText = pdfDocument.GetPdfText(pageIndex);
+
+                        if (!string.IsNullOrWhiteSpace(pageText))
+                        {
+                            isTextBasedPdf = true;
+                            extractedText.AppendLine(pageText);
+                        }
+                    }
+
+                    if (isTextBasedPdf)
+                    {
+                        return Content(extractedText.ToString(), "text/plain");
+                    }
+
+                    // Fallback to OCR if no embedded text found
+                    using (var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default))
+                    {
+                        for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
+                        {
+                            using (var bitmap = (Bitmap)pdfDocument.Render(pageIndex, 300, 300, true))
+                            using (var pix = PixConverter.ToPix(bitmap))
+                            using (var page = ocrEngine.Process(pix))
+                            {
+                                extractedText.AppendLine(page.GetText());
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while processing the file: {ex.Message}");
+            }
+
+            return Content(extractedText.ToString(), "text/plain");
         }
 
         // PUT: api/Application/5

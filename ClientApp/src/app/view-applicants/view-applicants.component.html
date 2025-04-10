@@ -17,9 +17,9 @@
     </button>
   </div>
   <br />
-  <button mat-fab extended class="scan-button">
+  <button mat-fab extended class="scan-button" (click)="openScanModal()">
     Scan
-    <mat-icon>printer</mat-icon>
+    <mat-icon>scanner</mat-icon>
   </button>
 
   <button mat-fab extended class="add-button" (click)="openAddModal()">
@@ -107,8 +107,11 @@
           </tr>
           <tr>
             <td><strong>Applied Program</strong></td>
-            <td>:    {{ getProgramName(modalContent.appliedProgram) }}
-              ({{ modalContent.appliedProgram }})</td>
+            <td>
+              : {{ getProgramName(modalContent.appliedProgram) }} ({{
+                modalContent.appliedProgram
+              }})
+            </td>
           </tr>
           <tr>
             <td><strong>IC Number</strong></td>
@@ -216,17 +219,17 @@
         <mat-form-field appearance="fill">
           <mat-label>Applying for Faculty</mat-label>
           <mat-select formControlName="faculty">
-            <mat-option value="fc">Faculty of Computing</mat-option>
-            <mat-option value="fkm">Faculty of Mechanical Engineering</mat-option>
-            <mat-option value="fke">Faculty of Engineering</mat-option>
+            <mat-option
+              *ngFor="let faculty of faculties"
+              [value]="faculty.facultyCode"
+            >
+              {{ faculty.faculty }}
+            </mat-option>
           </mat-select>
         </mat-form-field>
 
         <!-- Program Selection -->
-        <mat-form-field
-          *ngIf="addForm.get('faculty')?.value"
-          appearance="fill"
-        >
+        <mat-form-field *ngIf="addForm.get('faculty')?.value" appearance="fill">
           <mat-label>Applying for Program</mat-label>
           <mat-select formControlName="program_code">
             <mat-option
@@ -263,7 +266,6 @@
             <mat-option value="Male">Male</mat-option>
           </mat-select>
         </mat-form-field>
-
       </div>
       <br />
 
@@ -288,14 +290,12 @@
           </mat-form-field>
           <mat-form-field appearance="fill" class="result-field">
             <mat-label>Grade</mat-label>
-            <input
-              matInput
-              formControlName="grade"
-              placeholder="Enter Grade"
-            />
+            <input matInput formControlName="grade" placeholder="Enter Grade" />
           </mat-form-field>
           <button
-          mat-mini-fab color="warn" style="box-shadow: none;"
+            mat-mini-fab
+            color="warn"
+            style="box-shadow: none"
             type="button"
             (click)="removeSpmResult(i)"
             class="remove-button"
@@ -305,9 +305,223 @@
         </div>
       </div>
       <div class="add-result-btn-container">
-        <button mat-raised-button color="primary" type="button" (click)="addSpmResult()">
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="addSpmResult()"
+        >
           <mat-icon>add</mat-icon>Add SPM Result
         </button>
+      </div>
+
+      <br /><br />
+
+      <!-- Pre-U Results Section (Choose One) -->
+      <h3>Pre-U Results</h3>
+      <div formArrayName="preUResults">
+        <div
+          *ngFor="let preUGroup of preUResults.controls; let j = index"
+          [formGroupName]="j"
+          class="result-row"
+        >
+          <mat-form-field appearance="fill" class="result-field">
+            <mat-label>Subject</mat-label>
+            <mat-select formControlName="subject">
+              <mat-option *ngIf="!addForm.get('preUType')?.value" disabled>
+                Select Pre-U Type first
+              </mat-option>
+              <mat-option
+                *ngFor="let subject of getAvailablePreUSubjects(j)"
+                [value]="subject"
+              >
+                {{ subject }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="result-field">
+            <mat-label>Grade</mat-label>
+            <input matInput formControlName="grade" placeholder="Enter Grade" />
+          </mat-form-field>
+          <button
+            mat-mini-fab
+            (click)="removePreUResult(j)"
+            class="remove-button"
+            color="warn"
+            style="box-shadow: none"
+          >
+            <mat-icon>remove</mat-icon>
+          </button>
+        </div>
+      </div>
+      <div class="add-result-btn-container">
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="addPreUResult()"
+        >
+          <mat-icon>add</mat-icon> Add Pre-U Result
+        </button>
+      </div>
+
+      <br /><br />
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="addForm.invalid"
+          style="margin-right: 10px"
+        >
+          Submit
+        </button>
+        <button
+          mat-raised-button
+          color="warn"
+          type="button"
+          (click)="closeAddModal()"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Scan Modal -->
+<div
+  class="add-modal-overlay"
+  *ngIf="isScanModalOpen"
+  (click)="closeScanModal()"
+>
+  <div class="add-modal-content" (click)="$event.stopPropagation()">
+    <h2>Scan New Applicant</h2>
+    <form [formGroup]="addForm" (ngSubmit)="onAddSubmit()">
+      <!-- Personal Info -->
+      <div class="personal-info">
+        <mat-form-field appearance="fill">
+          <mat-label>Name:</mat-label>
+          <input matInput formControlName="name" placeholder="Enter Name" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Pre-U Type</mat-label>
+          <mat-select formControlName="preUType">
+            <mat-option value="STPM">STPM</mat-option>
+            <mat-option value="Matriculation">Matriculation</mat-option>
+            <mat-option value="Foundation">Foundation</mat-option>
+            <mat-option value="Diploma">Diploma</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Applying for Faculty</mat-label>
+          <mat-select formControlName="faculty">
+            <mat-option
+              *ngFor="let faculty of faculties"
+              [value]="faculty.facultyCode"
+            >
+              {{ faculty.faculty }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Program Selection -->
+        <mat-form-field *ngIf="addForm.get('faculty')?.value" appearance="fill">
+          <mat-label>Applying for Program</mat-label>
+          <mat-select formControlName="program_code">
+            <mat-option
+              *ngFor="let program of getProgramsForFacultyDropdown()"
+              [value]="program.code"
+            >
+              {{ program.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>IC Number:</mat-label>
+          <input
+            matInput
+            formControlName="icNumber"
+            placeholder="Enter IC Number"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Address:</mat-label>
+          <input
+            matInput
+            formControlName="address"
+            placeholder="Enter Address"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Gender:</mat-label>
+          <mat-select formControlName="gender">
+            <mat-option value="Female">Female</mat-option>
+            <mat-option value="Male">Male</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <br />
+
+      <!-- SPM Results Section (Required) -->
+      <h3>SPM Results</h3>
+
+      <!-- Hidden file input -->
+      <input
+        type="file"
+        #spmFileInput
+        accept="application/pdf"
+        (change)="onSpmFileSelected($event)"
+        style="display: none"
+      />
+
+      <div class="add-result-btn-container">
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="scanSpmResult()"
+        >
+          <mat-icon>scanner</mat-icon> Scan SPM Result
+        </button>
+      </div>
+
+      <div formArrayName="spmResults">
+        <div
+          *ngFor="let spmGroup of spmResults.controls; let i = index"
+          [formGroupName]="i"
+          class="result-row"
+        >
+          <mat-form-field appearance="fill" class="result-field">
+            <mat-label>Subject</mat-label>
+            <mat-select formControlName="subject">
+              <mat-option
+                *ngFor="let subject of getAvailableSpmSubjects(i)"
+                [value]="subject"
+              >
+                {{ subject }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="result-field">
+            <mat-label>Grade</mat-label>
+            <input matInput formControlName="grade" placeholder="Enter Grade" />
+          </mat-form-field>
+          <button
+            mat-mini-fab
+            color="warn"
+            type="button"
+            (click)="removeSpmResult(i)"
+          >
+            <mat-icon>remove</mat-icon>
+          </button>
+        </div>
       </div>
 
       <br /><br />
@@ -333,38 +547,46 @@
           </mat-form-field>
           <mat-form-field appearance="fill" class="result-field">
             <mat-label>Grade</mat-label>
-            <input
-              matInput
-              formControlName="grade"
-              placeholder="Enter Grade"
-            />
+            <input matInput formControlName="grade" placeholder="Enter Grade" />
           </mat-form-field>
           <button
-          mat-mini-fab
+            mat-mini-fab
             (click)="removePreUResult(j)"
-            class="remove-button" color="warn" style="box-shadow: none;"
+            class="remove-button"
+            color="warn"
+            style="box-shadow: none"
           >
-          <mat-icon>remove</mat-icon>
-        </button>
+            <mat-icon>remove</mat-icon>
+          </button>
         </div>
       </div>
       <div class="add-result-btn-container">
-        <button mat-raised-button  color="primary" type="button"  (click)="addPreUResult()">
-          <mat-icon>add</mat-icon> Add Pre-U Result
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="scanPreUResult()"
+        >
+          <mat-icon>scanner</mat-icon> Scan Pre-U Result
         </button>
       </div>
 
       <br /><br />
       <!-- Modal Footer -->
       <div class="modal-footer">
-        <button mat-raised-button color="primary" type="submit" style="margin-right: 10px;">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          style="margin-right: 10px"
+        >
           Submit
         </button>
         <button
           mat-raised-button
           color="warn"
           type="button"
-          (click)="closeAddModal()"
+          (click)="closeScanModal()"
         >
           Cancel
         </button>
