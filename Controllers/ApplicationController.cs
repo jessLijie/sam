@@ -326,7 +326,7 @@ namespace sam.Controllers
                     if (isTextBasedPdf)
                     {
                         var extracted = extractedText.ToString();
-                        var parsed = ExtractionController.ParseSpmSubjects(extracted);
+                        var parsed = ExtractionController.ParseStpmSubjects(extracted);
 
                         return new JsonResult(new
                         {

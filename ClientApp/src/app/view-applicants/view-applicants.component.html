@@ -80,7 +80,7 @@
       <button mat-button (click)="openApplicantDetailModal(applicant)">
         <mat-icon style="color: green">search</mat-icon>
       </button>
-      <button mat-button style="color: red">
+      <button mat-button style="color: red"  (click)="confirmDelete(applicant.id)">
         <mat-icon>delete</mat-icon>
       </button>
     </td>
@@ -538,6 +538,32 @@
 
       <!-- Pre-U Results Section (Choose One) -->
       <h3>Pre-U Results</h3>
+      <input
+      type="file"
+      #stpmFileInput
+      accept="application/pdf"
+      (change)="onStpmFileSelected($event)"
+      style="display: none"
+    />
+      <div class="add-result-btn-container">
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          [disabled]="!addForm.get('preUType')?.value"
+          (click)="scanPreUResult()"
+        >
+          <mat-icon>scanner</mat-icon>
+          Scan {{ addForm.get("preUType")?.value || "Pre-U" }} Result
+        </button>
+        <br>
+        <small
+          *ngIf="!addForm.get('preUType')?.value"
+          style="color: red; font-style: italic"
+        >
+          Please select a Pre-U Type before scanning results.
+        </small>
+      </div>
       <div formArrayName="preUResults">
         <div
           *ngFor="let preUGroup of preUResults.controls; let j = index"
@@ -583,32 +609,7 @@
           </button>
         </div>
       </div>
-      <input
-      type="file"
-      #stpmFileInput
-      accept="application/pdf"
-      (change)="onStpmFileSelected($event)"
-      style="display: none"
-    />
-      <div class="add-result-btn-container">
-        <button
-          mat-raised-button
-          color="primary"
-          type="button"
-          [disabled]="!addForm.get('preUType')?.value"
-          (click)="scanPreUResult()"
-        >
-          <mat-icon>scanner</mat-icon>
-          Scan {{ addForm.get("preUType")?.value || "Pre-U" }} Result
-        </button>
-        <br>
-        <small
-          *ngIf="!addForm.get('preUType')?.value"
-          style="color: red; font-style: italic"
-        >
-          Please select a Pre-U Type before scanning results.
-        </small>
-      </div>
+
 
       <br /><br />
       <!-- Modal Footer -->

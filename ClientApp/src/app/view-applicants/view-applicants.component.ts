@@ -147,7 +147,7 @@ export class ViewApplicantsComponent implements OnInit {
       address: [''],
       gender: [''],
       spmResults: this.fb.array([], Validators.required),
-      preUResults: this.fb.array([])
+      preUResults: this.fb.array([], Validators.required)
     });
   }
 
@@ -307,13 +307,13 @@ export class ViewApplicantsComponent implements OnInit {
         //     })
         //   );
         // });
-        console.log('Extracted Text:', res.rawText);
-        console.log('Parsed Result:', res.parsed);        // const extractedText = res as string;
+        console.log('Extracted SPM Text:', res.rawText);
+        console.log('Parsed SPM Result:', res.parsed);        // const extractedText = res as string;
         // console.log(extractedText);
 
         // Populate the form array with parsed SPM results
         Object.entries(res.parsed).forEach(([subject, grade]) => {
-          this.preUResults.push(
+          this.spmResults.push(
             this.fb.group({
               subject: [subject, Validators.required],
               grade: [grade, Validators.required]
@@ -345,7 +345,7 @@ export class ViewApplicantsComponent implements OnInit {
     ).subscribe({
       next: (res) => {
         console.log('Extracted Text:', res.rawText);
-        console.log('Parsed Result:', res.parsed);        // const extractedText = res as string;
+        console.log('Parsed STPM Result:', res.parsed);        // const extractedText = res as string;
         Object.entries(res.parsed).forEach(([subject, grade]) => {
           this.preUResults.push(
             this.fb.group({
@@ -359,8 +359,8 @@ export class ViewApplicantsComponent implements OnInit {
 
       },
       error: (err) => {
-        console.error('Error scanning SPM:', err);
-        alert('Failed to scan SPM file. Please try again.');
+        console.error('Error scanning STPM:', err);
+        alert('Failed to scan STPM file. Please try again.');
       }
     });
   }
@@ -442,28 +442,39 @@ export class ViewApplicantsComponent implements OnInit {
       delete newRecord.preUResults;
 
       console.log('Submitting new record:', newRecord);
+
       this.http.post(this.apiUrl, newRecord).subscribe({
         next: (res) => {
+          this.snackBar.open('Application created successfully!', 'Close', {
+            duration: 2000,
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+          });
           this.fetchApplicants();
+          this.addForm.reset();
           this.closeAddModal();
+          this.closeScanModal();
         },
-        error: (err) => console.error('Error creating record:', err)
+        error: (err) => {
+          console.error('Error creating record:', err);
+          this.snackBar.open('Failed to create application.', 'Close', {
+            duration: 2000,
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+          });
+        }
       });
 
-      this.snackBar.open('Application created successfully!', 'Close', {
-        duration: 2000,
-        horizontalPosition: 'right',
-        verticalPosition: 'top',
-      });
-      this.addForm.reset();
     } else {
       console.log('Form is invalid');
+      this.addForm.reset();
+      this.closeAddModal();
+      this.closeScanModal();
       this.snackBar.open('Failed to create application.', 'Close', {
         duration: 2000,
         horizontalPosition: 'right',
         verticalPosition: 'top',
       });
-      this.addForm.reset();
     }
   }
 
@@ -499,11 +510,30 @@ export class ViewApplicantsComponent implements OnInit {
   deleteApplicant(id: number): void {
     this.http.delete(`${this.apiUrl}/${id}`).subscribe({
       next: () => {
+        this.snackBar.open('Application deleted successfully!', 'Close', {
+          duration: 2000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+        });
         this.fetchApplicants();
       },
-      error: (err) => console.error('Error deleting record:', err)
+      error: (err) => {
+        console.error('Error deleting record:', err);
+        this.snackBar.open('Failed to delete application.', 'Close', {
+          duration: 2000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+        });
+      }
     });
   }
+
+  confirmDelete(id: number): void {
+    if (confirm('Are you sure you want to delete this applicant?')) {
+      this.deleteApplicant(id);
+    }
+  }
+
 
   createApplicant(newApplicant: Applicants): void {
     this.http.post<Applicants>(this.apiUrl, newApplicant).subscribe({
