@@ -109,3 +109,41 @@ dotnet add package FuzzySharp
 
 `fke`: UT6522002(electrical), UT6523001(electronic), UT6523002(mecha), UT6523003(bio)
 
+### My Note
+
+Entry Requirement: 
+Created database for 4 different graduate types: Diploma, STPM, Foundation and SPM
+
+Equivalent can be separated by "/"
+
+Student's result:
+when upload pdf, extract the information from the file and store into database
+- foundation
+- spm
+- stpm
+- diploma
+
+CREATE TABLE sam.XXX_result (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `type` varchar(45) NOT NULL,
+  `faculty` varchar(45) NOT NULL,
+  `program_code` varchar(45) DEFAULT NULL,
+  `subject` varchar(45) DEFAULT NULL,
+  `grade` varchar(45) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+Limitation:
+Only applicable to applicants with spm, stpm, foundation or diploma results [other qualifications shall be ignored] 
+Focus is on the filter process**
+
+!!!!BANNED SOLUTION !!!
+i need to create few more new tables for my system: applications, spm_results, stpm_results, matriculation_result, foundation_result
+applications [id, name, ic_number, spm, pre_u_type, pre_u]
+spm_results [id, application_id, bm, bi]
+stpm_results []
+matriculation_results []
+foudation_results []
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!NONONONONO!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
