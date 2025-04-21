@@ -579,7 +579,7 @@
             type="button"
             (click)="addPreUResult()"
           >
-            <mat-icon>add</mat-icon>Add SPM Result
+            <mat-icon>add</mat-icon>Add {{ addForm.get("preUType")?.value || "Pre-U" }} Result
           </button>
         </div>
       </div>
