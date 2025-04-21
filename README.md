@@ -1,4 +1,4 @@
-# SAM (Sistem Ambilan Mahasiswa):
+# SAM (Sistem Ambilan Mahasiswa)
 Student Admission System With Automated Filtering Feature
 
 ## Commands

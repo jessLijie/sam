@@ -298,6 +298,90 @@ namespace sam.Controllers
             });
         }
 
+        [HttpPost("scan/stpm")]
+        public async Task<IActionResult> ScanSTPM(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            var extractedText = new StringBuilder();
+            bool isTextBasedPdf = false;
+
+            try
+            {
+                using (var stream = file.OpenReadStream())
+                {
+                    var pdfDocument = PdfiumViewer.PdfDocument.Load(stream);
+
+                    for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
+                    {
+                        string pageText = pdfDocument.GetPdfText(pageIndex);
+                        if (!string.IsNullOrWhiteSpace(pageText))
+                        {
+                            isTextBasedPdf = true;
+                            extractedText.AppendLine(pageText);
+                        }
+                    }
+
+                    if (isTextBasedPdf)
+                    {
+                        var extracted = extractedText.ToString();
+                        var parsed = ExtractionController.ParseSpmSubjects(extracted);
+
+                        return new JsonResult(new
+                        {
+                            rawText = extracted,
+                            parsed = parsed
+                        });
+                    }
+                    using var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default);
+
+                    for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
+                    {
+                        using (var rawBitmap = (Bitmap)pdfDocument.Render(pageIndex, 300, 300, true))
+                        using (var emguImage = rawBitmap.ToImage<Bgr, byte>())
+                        {
+                            var gray = emguImage.Convert<Gray, byte>().ThresholdBinary(new Gray(180), new Gray(255));
+
+                            using (var pix = PixConverter.ToPix(gray.ToBitmap()))
+                            using (var page = ocrEngine.Process(pix))
+                            {
+                                extractedText.AppendLine(page.GetText());
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+
+            var extractedTextStr = extractedText.ToString();
+            var results = ExtractionController.ParseStpmSubjects(extractedTextStr);
+
+            // Check if the dictionary is empty
+            if (results.Count == 0)
+            {
+                Console.WriteLine("No subjects and grades were extracted.");
+            }
+            else
+            {
+                Console.WriteLine("Extracted STPM Grade:");
+
+                // Iterate through the dictionary and print each subject and grade
+                foreach (var entry in results)
+                {
+                    Console.WriteLine($"{entry.Key}: {entry.Value}");
+                }
+            }
+            return Ok(new
+            {
+                rawText = extractedTextStr,
+                parsed = results
+            });
+        }
+
         // PUT: api/Application/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutApplication(int id, Application application)

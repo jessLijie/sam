@@ -572,7 +572,24 @@
             <mat-icon>remove</mat-icon>
           </button>
         </div>
+        <div class="add-result-btn-container" *ngIf="preUResults.length > 0">
+          <button
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="addPreUResult()"
+          >
+            <mat-icon>add</mat-icon>Add SPM Result
+          </button>
+        </div>
       </div>
+      <input
+      type="file"
+      #stpmFileInput
+      accept="application/pdf"
+      (change)="onStpmFileSelected($event)"
+      style="display: none"
+    />
       <div class="add-result-btn-container">
         <button
           mat-raised-button

@@ -12,12 +12,21 @@ namespace sam.Controllers
 
         // Valid SPM grades
         private static readonly List<string> ValidGrades = new List<string>
-    {
-        "A+", "A", "A-", "B+", "B", "C+", "C", "D", "E", "G"
-    };
+
+        {
+            "A+", "A", "A-", "B+", "B", "C+", "C", "D", "E", "G"
+        };
+
+        // Valid STPM grades
+        private static readonly List<string> ValidSTPMGrades = new List<string>
+
+        {
+            "4.00", "3.67", "3.33", "3.00", "2.67", "2.33", "2.00","1.67", "1.33", "1.00","1.00"
+        };
 
         // Common OCR fixes
         private static readonly Dictionary<string, string> Corrections = new Dictionary<string, string>
+
         {
             { "BARAGA MELAYD", "BAHASA MELAYU" },
             { "BARAGA MELsYD", "BAHASA MELAYU" },
@@ -35,6 +44,13 @@ namespace sam.Controllers
             { "TINGGT", "TINGGI" },
             { "TINGGL", "TINGGI" }
                 };
+
+        private static readonly string[] InvalidSubjectKeywords = new[]
+{
+            "CEMERLANG", "TINGGI", "TERTINGGI", "PEPERIKSAAN", "LEMBAGA", "KEMENTERIAN",
+            "LAYAK", "MENDAPAT", "SIJIL", "PENGARAN", "GRED", "SHIC", "BUKIT", "MALURI", "KUALA", "LUMPUR","MATA","PELAJARAN","NAMA","GRED"
+        };
+
         private static readonly List<string> ValidSPMSubjects = new List<string>
             {
                 "Bahasa Melayu", "Bahasa Inggeris", "Pendidikan Moral", "Sejarah",
@@ -42,11 +58,12 @@ namespace sam.Controllers
                 "Biology", "Bahasa Cina"
             };
 
-        private static readonly string[] InvalidSubjectKeywords = new[]
-        {
-            "CEMERLANG", "TINGGI", "TERTINGGI", "PEPERIKSAAN", "LEMBAGA", "KEMENTERIAN",
-            "LAYAK", "MENDAPAT", "SIJIL", "PENGARAN", "GRED", "SHIC", "BUKIT", "MALURI", "KUALA", "LUMPUR","MATA","PELAJARAN","NAMA","GRED"
-        };
+        private static readonly List<string> ValidSTPMSubjects = new List<string>
+            {
+                "Pengajian Am","Mathematics (T)","Mathematics (M)","Physics","Chemistry","Biology"
+            };
+
+
 
         public static Dictionary<string, string> ParseSpmSubjects(string extractedText)
         {
@@ -79,7 +96,7 @@ namespace sam.Controllers
                 }
             }
 
-             for (int i = 0; i < grades.Count; i++)
+            for (int i = 0; i < grades.Count; i++)
             {
                 Console.WriteLine(grades[i]);
             }
@@ -93,9 +110,61 @@ namespace sam.Controllers
 
             }
 
-            Console.WriteLine("Extracted "+ matchedSubjects.Count +" subjects and "+ grades.Count +" grades");
+            Console.WriteLine("Extracted " + matchedSubjects.Count + " subjects and " + grades.Count + " grades");
 
-           
+
+
+            return result;
+        }
+
+  public static Dictionary<string, string> ParseStpmSubjects(string extractedText)
+        {
+            var result = new Dictionary<string, string>();
+            var lines = extractedText.Replace("\r\n", "\n").Split('\n')
+                .Select(line => line.Trim()).Where(line => line.Length > 0).ToList();
+
+            // Step 1: Extract fuzzy-matched subjects
+            List<string> matchedSubjects = new List<string>();
+
+            foreach (var line in lines)
+            {
+                var bestMatch = Process.ExtractOne(line, ValidSTPMSubjects);
+                if (bestMatch != null && bestMatch.Score >= 85 && !matchedSubjects.Contains(bestMatch.Value))
+                {
+                    matchedSubjects.Add(bestMatch.Value);
+                }
+            }
+
+            // Step 2: Extract grades (loose match)
+            List<string> grades = new List<string>();
+            Regex looseGradeRegex = new Regex(@"[AaJj]\s?[\*\+=~\-]?", RegexOptions.IgnoreCase);
+
+            foreach (var line in lines)
+            {
+                var match = looseGradeRegex.Match(line);
+                if (match.Success)
+                {
+                    grades.Add(NormalizeGrade(match.Value));
+                }
+            }
+
+            for (int i = 0; i < grades.Count; i++)
+            {
+                Console.WriteLine(grades[i]);
+            }
+
+            // Step 3: Match subjects with grades
+            int count = Math.Min(matchedSubjects.Count, grades.Count);
+            for (int i = 0; i < count; i++)
+            {
+                // result[matchedSubjects[i]] = grades[i];
+                result[matchedSubjects[matchedSubjects.Count - count + i]] = grades[grades.Count - count + i];
+
+            }
+
+            Console.WriteLine("Extracted " + matchedSubjects.Count + " subjects and " + grades.Count + " grades");
+
+
 
             return result;
         }
