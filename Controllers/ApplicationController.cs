@@ -11,6 +11,12 @@ using iText.Kernel.Pdf.Canvas.Parser;
 using iText.Kernel.Pdf.Canvas.Parser.Listener;
 using PdfiumViewer;
 using Tesseract;
+using System.Drawing.Imaging;
+using System;
+using System.IO;
+using Emgu.CV;
+using Emgu.CV.Structure;
+using Emgu.CV.CvEnum;
 using System.Drawing;
 
 namespace sam.Controllers
@@ -161,6 +167,56 @@ namespace sam.Controllers
             // return Content(extractedText.ToString(), "text/plain");
 
             // use Tesseract
+            // var extractedText = new StringBuilder();
+            // bool isTextBasedPdf = false;
+
+            // try
+            // {
+            //     using (var stream = file.OpenReadStream())
+            //     {
+            //         var pdfDocument = PdfiumViewer.PdfDocument.Load(stream);
+
+            //         for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
+            //         {
+            //             string pageText = pdfDocument.GetPdfText(pageIndex);
+
+            //             if (!string.IsNullOrWhiteSpace(pageText))
+            //             {
+            //                 isTextBasedPdf = true;
+            //                 extractedText.AppendLine(pageText);
+            //             }
+            //         }
+
+            //         if (isTextBasedPdf)
+            //         {
+            //             return Content(extractedText.ToString(), "text/plain");
+            //         }
+
+            //         // Fallback to OCR if no embedded text found
+            //         using (var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default))
+            //         {
+            //             for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
+            //             {
+            //                 using (var bitmap = (Bitmap)pdfDocument.Render(pageIndex, 300, 300, true))
+            //                 using (var pix = PixConverter.ToPix(bitmap))
+            //                 using (var page = ocrEngine.Process(pix))
+            //                 {
+            //                     extractedText.AppendLine(page.GetText());
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+            // catch (Exception ex)
+            // {
+            //     return StatusCode(500, $"An error occurred while processing the file: {ex.Message}");
+            // }
+
+            // return Content(extractedText.ToString(), "text/plain");
+
+            // Complete pipeline
+
+
             var extractedText = new StringBuilder();
             bool isTextBasedPdf = false;
 
@@ -173,7 +229,6 @@ namespace sam.Controllers
                     for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
                     {
                         string pageText = pdfDocument.GetPdfText(pageIndex);
-
                         if (!string.IsNullOrWhiteSpace(pageText))
                         {
                             isTextBasedPdf = true;
@@ -183,16 +238,27 @@ namespace sam.Controllers
 
                     if (isTextBasedPdf)
                     {
-                        return Content(extractedText.ToString(), "text/plain");
+                        var extracted = extractedText.ToString();
+                        var parsed = ExtractionController.ParseSpmSubjects(extracted);
+
+                        return new JsonResult(new
+                        {
+                            rawText = extracted,
+                            parsed = parsed
+                        });
                     }
 
-                    // Fallback to OCR if no embedded text found
-                    using (var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default))
+                    // string tessdataPath = Path.Combine(Directory.GetCurrentDirectory(), "tessdata");
+                    using var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default);
+
+                    for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
                     {
-                        for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
+                        using (var rawBitmap = (Bitmap)pdfDocument.Render(pageIndex, 300, 300, true))
+                        using (var emguImage = rawBitmap.ToImage<Bgr, byte>())
                         {
-                            using (var bitmap = (Bitmap)pdfDocument.Render(pageIndex, 300, 300, true))
-                            using (var pix = PixConverter.ToPix(bitmap))
+                            var gray = emguImage.Convert<Gray, byte>().ThresholdBinary(new Gray(180), new Gray(255));
+
+                            using (var pix = PixConverter.ToPix(gray.ToBitmap()))
                             using (var page = ocrEngine.Process(pix))
                             {
                                 extractedText.AppendLine(page.GetText());
@@ -203,10 +269,33 @@ namespace sam.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"An error occurred while processing the file: {ex.Message}");
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
 
-            return Content(extractedText.ToString(), "text/plain");
+            var extractedTextStr = extractedText.ToString();
+            // Console.WriteLine("Extracted SPM Text:\n" + extractedTextStr);
+            var results = ExtractionController.ParseSpmSubjects(extractedTextStr);
+
+            // Check if the dictionary is empty
+            if (results.Count == 0)
+            {
+                Console.WriteLine("No subjects and grades were extracted.");
+            }
+            else
+            {
+                Console.WriteLine("Extracted SPM Grade:");
+
+                // Iterate through the dictionary and print each subject and grade
+                foreach (var entry in results)
+                {
+                    Console.WriteLine($"{entry.Key}: {entry.Value}");
+                }
+            }
+            return Ok(new
+            {
+                rawText = extractedTextStr,
+                parsed = results
+            });
         }
 
         // PUT: api/Application/5

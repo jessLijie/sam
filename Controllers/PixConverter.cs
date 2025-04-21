@@ -2,7 +2,9 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using Tesseract;
-
+using Emgu.CV;
+using Emgu.CV.Structure;
+using Emgu.CV.CvEnum;
 public static class PixConverter
 {
     public static Pix ToPix(Bitmap image)
@@ -14,4 +16,7 @@ public static class PixConverter
             return Pix.LoadTiffFromMemory(stream.ToArray());
         }
     }
+
+ 
+
 }

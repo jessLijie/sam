@@ -522,6 +522,16 @@
             <mat-icon>remove</mat-icon>
           </button>
         </div>
+        <div class="add-result-btn-container" *ngIf="spmResults.length > 0">
+          <button
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="addSpmResult()"
+          >
+            <mat-icon>add</mat-icon>Add SPM Result
+          </button>
+        </div>
       </div>
 
       <br /><br />
@@ -537,6 +547,9 @@
           <mat-form-field appearance="fill" class="result-field">
             <mat-label>Subject</mat-label>
             <mat-select formControlName="subject">
+              <mat-option *ngIf="!addForm.get('preUType')?.value" disabled>
+                Select Pre-U Type first
+              </mat-option>
               <mat-option
                 *ngFor="let subject of getAvailablePreUSubjects(j)"
                 [value]="subject"
@@ -565,10 +578,19 @@
           mat-raised-button
           color="primary"
           type="button"
+          [disabled]="!addForm.get('preUType')?.value"
           (click)="scanPreUResult()"
         >
-          <mat-icon>scanner</mat-icon> Scan Pre-U Result
+          <mat-icon>scanner</mat-icon>
+          Scan {{ addForm.get("preUType")?.value || "Pre-U" }} Result
         </button>
+        <br>
+        <small
+          *ngIf="!addForm.get('preUType')?.value"
+          style="color: red; font-style: italic"
+        >
+          Please select a Pre-U Type before scanning results.
+        </small>
       </div>
 
       <br /><br />

@@ -75,7 +75,7 @@ export class ViewApplicantsComponent implements OnInit {
   spmSubjectOptions = [
     'Bahasa Melayu',
     'Bahasa Cina',
-    'Bahasa Ingerris',
+    'Bahasa Inggeris',
     'Sejarah',
     'Pendidikan Moral',
     'Physics',
@@ -283,6 +283,7 @@ export class ViewApplicantsComponent implements OnInit {
   }
 
   onSpmFileSelected(event: Event) {
+    // this.spmResults.clear();
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -290,7 +291,9 @@ export class ViewApplicantsComponent implements OnInit {
     const formData = new FormData();
     formData.append('file', file);
 
-    this.http.post<any>(`${this.apiUrl}/scan/spm`, formData,{ responseType: 'text' as 'json' }).subscribe({
+    this.http.post<any>(`${this.apiUrl}/scan/spm`, formData
+      // ,{ responseType: 'text' as 'json' }
+    ).subscribe({
       next: (res) => {
         // console.log('Extracted SPM:', res);
         // const results = res as Record<string, string>;
@@ -302,171 +305,187 @@ export class ViewApplicantsComponent implements OnInit {
         //     })
         //   );
         // });
-        console.log('Extracted SPM Text:', res);
-        const extractedText = res as string;
-        console.log(extractedText);
-      },
+        console.log('Extracted Text:', res.rawText);
+        console.log('Parsed Result:', res.parsed);        // const extractedText = res as string;
+        // console.log(extractedText);
+
+        // Populate the form array with parsed SPM results
+        Object.entries(res.parsed).forEach(([subject, grade]) => {
+          this.spmResults.push(
+            this.fb.group({
+              subject: [subject, Validators.required],
+              grade: [grade, Validators.required]
+            })
+          );
+        });
+
+        this.cdr.detectChanges();
+
+    },
       error: (err) => {
         console.error('Error scanning SPM:', err);
         alert('Failed to scan SPM file. Please try again.');
       }
     });
+}
+
+
+addSpmResult(): void {
+  this.spmResults.push(this.fb.group({
+    subject: ['', Validators.required],
+    grade: ['', Validators.required]
+  }));
+}
+
+addPreUResult(): void {
+  this.preUResults.push(this.fb.group({
+    subject: ['', Validators.required],
+    grade: ['', Validators.required]
+  }));
+}
+
+
+removeSpmResult(index: number): void {
+  this.spmResults.removeAt(index);
+}
+removePreUResult(index: number): void {
+  this.preUResults.removeAt(index);
+}
+
+getAvailableSpmSubjects(index: number): string[] {
+  const selectedSubjects = this.spmResults.controls
+    .filter((ctrl, i) => i !== index)
+    .map(ctrl => ctrl.get('subject')?.value)
+    .filter(value => !!value);
+  return this.spmSubjectOptions.filter(option => !selectedSubjects.includes(option));
+}
+
+getAvailablePreUSubjects(index: number): string[] {
+  let options: string[] = [];
+  const preUType = this.addForm.get('preUType')?.value;
+  switch (preUType) {
+    case 'STPM':
+      options = this.stpmSubjectOptions;
+      break;
+    case 'Matriculation':
+      options = this.matriculationSubjectOptions;
+      break;
+    case 'Foundation':
+      options = this.foundationSubjectOptions;
+      break;
+    case 'Diploma':
+      options = this.diplomaSubjectOptions;
+      break;
+    default:
+      options = [];
+  }
+  const selectedSubjects = this.preUResults.controls
+    .filter((ctrl, i) => i !== index)
+    .map(ctrl => ctrl.get('subject')?.value)
+    .filter(value => !!value);
+  return options.filter(option => !selectedSubjects.includes(option));
+}
+
+onAddSubmit(): void {
+  if(this.addForm.valid) {
+  const newRecord = this.addForm.value;
+
+  const spmResultsObj: { [subject: string]: string } = {};
+  newRecord.spmResults.forEach((result: any) => {
+    spmResultsObj[result.subject] = result.grade;
+  });
+
+  const preUResultsObj: { [subject: string]: string } = {};
+  newRecord.preUResults.forEach((result: any) => {
+    preUResultsObj[result.subject] = result.grade;
+  });
+
+  newRecord.spmResult = JSON.stringify(spmResultsObj);
+  newRecord.preUResult = JSON.stringify(preUResultsObj);
+  delete newRecord.spmResults;
+  delete newRecord.preUResults;
+
+  console.log('Submitting new record:', newRecord);
+  this.http.post(this.apiUrl, newRecord).subscribe({
+    next: (res) => {
+      this.fetchApplicants();
+      this.closeAddModal();
+    },
+    error: (err) => console.error('Error creating record:', err)
+  });
+
+  this.snackBar.open('Application created successfully!', 'Close', {
+    duration: 2000,
+    horizontalPosition: 'right',
+    verticalPosition: 'top',
+  });
+  this.addForm.reset();
+} else {
+  console.log('Form is invalid');
+  this.snackBar.open('Failed to create application.', 'Close', {
+    duration: 2000,
+    horizontalPosition: 'right',
+    verticalPosition: 'top',
+  });
+  this.addForm.reset();
+}
   }
 
 
-  addSpmResult(): void {
-    this.spmResults.push(this.fb.group({
-      subject: ['', Validators.required],
-      grade: ['', Validators.required]
-    }));
+getProgramsForFacultyDropdown(): { code: string; name: string } [] {
+  const faculty = this.addForm.get('faculty')?.value;
+  return this.programs[faculty] || [];
+}
+
+openAddModal(): void {
+  this.addForm.reset();
+  while(this.spmResults.length) { this.spmResults.removeAt(0); }
+while (this.preUResults.length) { this.preUResults.removeAt(0); }
+this.addSpmResult();
+this.addPreUResult();
+this.isAddModalOpen = true;
   }
 
-  addPreUResult(): void {
-    this.preUResults.push(this.fb.group({
-      subject: ['', Validators.required],
-      grade: ['', Validators.required]
-    }));
-  }
+openScanModal(): void {
+  this.isScanModalOpen = true;
+  //Only allow when there are scanned result
+}
+
+closeAddModal(): void {
+  this.isAddModalOpen = false;
+}
 
 
-  removeSpmResult(index: number): void {
-    this.spmResults.removeAt(index);
-  }
-  removePreUResult(index: number): void {
-    this.preUResults.removeAt(index);
-  }
+closeScanModal(): void {
+  this.isScanModalOpen = false;
+}
 
-  getAvailableSpmSubjects(index: number): string[] {
-    const selectedSubjects = this.spmResults.controls
-      .filter((ctrl, i) => i !== index)
-      .map(ctrl => ctrl.get('subject')?.value)
-      .filter(value => !!value);
-    return this.spmSubjectOptions.filter(option => !selectedSubjects.includes(option));
-  }
+deleteApplicant(id: number): void {
+  this.http.delete(`${this.apiUrl}/${id}`).subscribe({
+    next: () => {
+      this.fetchApplicants();
+    },
+    error: (err) => console.error('Error deleting record:', err)
+  });
+}
 
-  getAvailablePreUSubjects(index: number): string[] {
-    let options: string[] = [];
-    const preUType = this.addForm.get('preUType')?.value;
-    switch (preUType) {
-      case 'STPM':
-        options = this.stpmSubjectOptions;
-        break;
-      case 'Matriculation':
-        options = this.matriculationSubjectOptions;
-        break;
-      case 'Foundation':
-        options = this.foundationSubjectOptions;
-        break;
-      case 'Diploma':
-        options = this.diplomaSubjectOptions;
-        break;
-      default:
-        options = [];
-    }
-    const selectedSubjects = this.preUResults.controls
-      .filter((ctrl, i) => i !== index)
-      .map(ctrl => ctrl.get('subject')?.value)
-      .filter(value => !!value);
-    return options.filter(option => !selectedSubjects.includes(option));
-  }
+createApplicant(newApplicant: Applicants): void {
+  this.http.post<Applicants>(this.apiUrl, newApplicant).subscribe({
+    next: (createdRecord) => {
+      this.fetchApplicants();
+    },
+    error: (err) => console.error('Error creating record:', err)
+  });
+}
 
-  onAddSubmit(): void {
-    if (this.addForm.valid) {
-      const newRecord = this.addForm.value;
-
-      const spmResultsObj: { [subject: string]: string } = {};
-      newRecord.spmResults.forEach((result: any) => {
-        spmResultsObj[result.subject] = result.grade;
-      });
-
-      const preUResultsObj: { [subject: string]: string } = {};
-      newRecord.preUResults.forEach((result: any) => {
-        preUResultsObj[result.subject] = result.grade;
-      });
-
-      newRecord.spmResult = JSON.stringify(spmResultsObj);
-      newRecord.preUResult = JSON.stringify(preUResultsObj);
-      delete newRecord.spmResults;
-      delete newRecord.preUResults;
-
-      console.log('Submitting new record:', newRecord);
-      this.http.post(this.apiUrl, newRecord).subscribe({
-        next: (res) => {
-          this.fetchApplicants();
-          this.closeAddModal();
-        },
-        error: (err) => console.error('Error creating record:', err)
-      });
-
-      this.snackBar.open('Application created successfully!', 'Close', {
-        duration: 2000,
-        horizontalPosition: 'right',
-        verticalPosition: 'top',
-      });
-    } else {
-      console.log('Form is invalid');
-      this.snackBar.open('Failed to create application.', 'Close', {
-        duration: 2000,
-        horizontalPosition: 'right',
-        verticalPosition: 'top',
-      });
-    }
-  }
-
-
-  getProgramsForFacultyDropdown(): { code: string; name: string }[] {
-    const faculty = this.addForm.get('faculty')?.value;
-    return this.programs[faculty] || [];
-  }
-
-  openAddModal(): void {
-    this.addForm.reset();
-    while (this.spmResults.length) { this.spmResults.removeAt(0); }
-    while (this.preUResults.length) { this.preUResults.removeAt(0); }
-    this.addSpmResult();
-    this.addPreUResult();
-    this.isAddModalOpen = true;
-  }
-
-  openScanModal(): void {
-    this.isScanModalOpen = true;
-  }
-
-  closeAddModal(): void {
-    this.isAddModalOpen = false;
-  }
-
-
-  closeScanModal(): void {
-    this.isScanModalOpen = false;
-  }
-
-  deleteApplicant(id: number): void {
-    this.http.delete(`${this.apiUrl}/${id}`).subscribe({
-      next: () => {
-        this.fetchApplicants();
-      },
-      error: (err) => console.error('Error deleting record:', err)
-    });
-  }
-
-  createApplicant(newApplicant: Applicants): void {
-    this.http.post<Applicants>(this.apiUrl, newApplicant).subscribe({
-      next: (createdRecord) => {
-        this.fetchApplicants();
-      },
-      error: (err) => console.error('Error creating record:', err)
-    });
-  }
-
-  updateApplicant(updatedApplicant: Applicants): void {
-    this.http.put(`${this.apiUrl}/${updatedApplicant.id}`, updatedApplicant).subscribe({
-      next: () => {
-        this.fetchApplicants();
-      },
-      error: (err) => console.error('Error updating record:', err)
-    });
-  }
+updateApplicant(updatedApplicant: Applicants): void {
+  this.http.put(`${this.apiUrl}/${updatedApplicant.id}`, updatedApplicant).subscribe({
+    next: () => {
+      this.fetchApplicants();
+    },
+    error: (err) => console.error('Error updating record:', err)
+  });
+}
 
 }
 
