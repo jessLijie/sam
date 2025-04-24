@@ -25,7 +25,12 @@
   </button>
 
   <button mat-fab extended class="manage-button" (click)="openSubjectModal()">
-    Course
+    Subject
+    <mat-icon>edit</mat-icon>
+  </button>
+
+  <button mat-fab extended class="quota-button" (click)="openCourseModal()">
+    Quota
     <mat-icon>edit</mat-icon>
   </button>
 </div>
@@ -359,17 +364,16 @@
 <!-- Subject Modal -->
 <div *ngIf="isSubjectModalOpen" class="modal-overlay-sub">
   <div class="modal-content-sub">
-
     <div class="modal-body-sub">
-
-
       <!-- Add Subject Form -->
       <h4>Add Subject</h4>
       <form [formGroup]="subjectForm">
         <mat-form-field>
           <mat-label>Category</mat-label>
           <mat-select formControlName="category">
-            <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+            <mat-option *ngFor="let cat of categories" [value]="cat">{{
+              cat
+            }}</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -379,26 +383,54 @@
         </mat-form-field>
 
         <div class="modal-actions">
-          <button mat-raised-button color="warn" type="button" (click)="closeSubjectModal()" class="subject-button">
+          <button
+            mat-raised-button
+            color="warn"
+            type="button"
+            (click)="closeSubjectModal()"
+            class="subject-button"
+          >
             Cancel
           </button>
-          <button mat-raised-button color="primary" type="button" (click)="saveSubject()" [disabled]="subjectForm.invalid" class="subject-button">
+          <button
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="saveSubject()"
+            [disabled]="subjectForm.invalid"
+            class="subject-button"
+          >
             Add
           </button>
         </div>
       </form>
-      <button mat-raised-button color="accent" (click)="toggleViewSubjects()" class="subject-button">
-        <mat-icon>{{ showSubjects ? "visibility_off" : "visibility" }}</mat-icon>
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="toggleViewSubjects()"
+        class="subject-button"
+      >
+        <mat-icon>{{
+          showSubjects ? "visibility_off" : "visibility"
+        }}</mat-icon>
         {{ showSubjects ? "Hide Subjects" : "View All Subjects" }}
       </button>
       <div *ngIf="showSubjects" class="table-container-sub">
-        <table mat-table [dataSource]="subjectDataSource" matSort class="full-width-table"  #subjectSort="matSort">
-
+        <table
+          mat-table
+          [dataSource]="subjectDataSource"
+          matSort
+          class="full-width-table"
+          #subjectSort="matSort"
+        >
           <!-- Category Column with Sorting -->
           <ng-container matColumnDef="category">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
             <td mat-cell *matCellDef="let subject">
-              <span class="category-tag" [ngClass]="getCategoryClass(subject.category)">
+              <span
+                class="category-tag"
+                [ngClass]="getCategoryClass(subject.category)"
+              >
                 {{ subject.category }}
               </span>
             </td>
@@ -407,14 +439,20 @@
           <!-- Subject Name Column -->
           <ng-container matColumnDef="subjectName">
             <th mat-header-cell *matHeaderCellDef>Subject Name</th>
-            <td mat-cell *matCellDef="let subject">{{ subject.subjectName }}</td>
+            <td mat-cell *matCellDef="let subject">
+              {{ subject.subjectName }}
+            </td>
           </ng-container>
 
           <!-- Actions Column -->
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let subject">
-              <button mat-icon-button color="warn" (click)="deleteSubject(subject.id)">
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="deleteSubject(subject.id)"
+              >
                 <mat-icon>delete</mat-icon>
               </button>
             </td>
@@ -425,11 +463,92 @@
             <tr mat-header-row *matHeaderRowDef="displayedCourseColumns"></tr>
           </thead>
           <tbody>
-            <tr mat-row *matRowDef="let row; columns: displayedCourseColumns;"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedCourseColumns"
+            ></tr>
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+</div>
 
+<!-- Course Quota Modal -->
+<div *ngIf="isCourseModalOpen" class="modal-overlay-custom">
+  <div class="course-modal-custom">
+    <div class="modal-body-custom">
+      <h4>Edit Quota</h4>
+      <!-- display tables with program code, program name and quota, quota is in editable field -->
+      <table
+        mat-table
+        [dataSource]="programsQuota"
+        matSort
+        class="mat-elevation-z8"
+      >
+        <ng-container matColumnDef="faculty">
+          <th mat-header-cell *matHeaderCellDef>Faculty</th>
+          <td mat-cell *matCellDef="let program">{{ program.faculty }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="program_code">
+          <th mat-header-cell *matHeaderCellDef>Program Code</th>
+          <td mat-cell *matCellDef="let program">{{ program.code }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="program_name">
+          <th mat-header-cell *matHeaderCellDef>Program Name</th>
+          <td mat-cell *matCellDef="let program">{{ program.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="quota">
+          <th mat-header-cell *matHeaderCellDef>Quota</th>
+          <td mat-cell *matCellDef="let program">
+            <mat-form-field appearance="outline" style="width: 90px;">
+              <input
+                matInput
+                type="number"
+                [(ngModel)]="program.quota"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                (change)="updateQuota(program.code, program.quota)"
+                onkeydown="return event.key >= 0 && event.key <= 9 || event.key === 'Backspace' || event.key === 'Delete' || event.key === 'ArrowLeft' || event.key === 'ArrowRight';"
+              />
+            </mat-form-field>
+          </td>
+        </ng-container>
+
+        <tr
+          mat-header-row
+          *matHeaderRowDef="[ 'faculty', 'program_code', 'program_name', 'quota' ]"
+        ></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: ['faculty', 'program_code', 'program_name', 'quota']"
+        ></tr>
+      </table>
+
+      <div class="modal-actions">
+        <button
+          mat-raised-button
+          color="warn"
+          type="button"
+          (click)="closeCourseModal()"
+          class="subject-button"
+        >
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="saveQuota()"
+          class="subject-button"
+        >
+          Save
+        </button>
+      </div>
     </div>
   </div>
 </div>

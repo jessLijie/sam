@@ -84,7 +84,6 @@ VALUES
 ```
     
 ## Packages
-
 ```bash
 dotnet add package UglyToad.PdfPig --prerelease❌ 
 dotnet add package itext7 🤩

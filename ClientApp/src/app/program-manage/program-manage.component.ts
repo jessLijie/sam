@@ -85,10 +85,16 @@ export class ProgramManageComponent implements AfterViewInit {
       category: ['', Validators.required],
       subjectName: ['', Validators.required]
     });
+    this.quotaForm = this.fb.group({
+      quota: ['', Validators.required],
+      program_code: ['', Validators.required],
+      faculty: ['', Validators.required]
+    });
     this.fetchCourses();
     this.fetchFaculties();
     this.fetchCategories();
     this.fetchAllSubjects();
+    this.fetchCoursesQuota();
   }
   createForm: FormGroup;
   isSpecialSelected: boolean = false;
@@ -122,15 +128,27 @@ export class ProgramManageComponent implements AfterViewInit {
   otherGrades = ["4.00", "3.67", "3.33", "3.00", "2.67"];
   muetGrades = ["5.5", "5.0", "4.0", "3.0", "2.0", "1.0"];
   isSubjectModalOpen: boolean = false;
+  isCourseModalOpen: boolean = false;
   showSubjects: boolean = false;
   subjectForm: FormGroup;
+  quotaForm: FormGroup;
   sortedSubjects: Subject[] = [];
   selectedSubjectId: number | null = null;
+  programsQuota: any[] = [];
+  updatedProgramsQuota: { code: string; quota: number }[] = [];
 
 
   openSubjectModal() {
     this.isSubjectModalOpen = true;
     this.subjectForm.reset();
+  }
+
+  openCourseModal() {
+    this.isCourseModalOpen = true;
+  }
+
+  closeCourseModal() {
+    this.isCourseModalOpen = false;
   }
 
   closeSubjectModal() {
@@ -145,9 +163,11 @@ export class ProgramManageComponent implements AfterViewInit {
 
     this.http.post('https://localhost:7108/api/Course/add', subjectData)
       .subscribe(() => {
-        this.snackBar.open('Subject added successfully!', 'Close', { duration: 2000,
+        this.snackBar.open('Subject added successfully!', 'Close', {
+          duration: 2000,
           horizontalPosition: 'right',
-          verticalPosition: 'top', });
+          verticalPosition: 'top',
+        });
         this.fetchAllSubjects();
         this.subjectForm.reset();
       }, error => console.error('Error adding subject:', error));
@@ -158,9 +178,11 @@ export class ProgramManageComponent implements AfterViewInit {
 
     this.http.delete(`https://localhost:7108/api/Course/delete/${subjectId}`)
       .subscribe(() => {
-        this.snackBar.open('Subject deleted successfully!', 'Close', { duration: 2000,
+        this.snackBar.open('Subject deleted successfully!', 'Close', {
+          duration: 2000,
           horizontalPosition: 'right',
-          verticalPosition: 'top', });
+          verticalPosition: 'top',
+        });
         this.fetchAllSubjects();
       }, error => console.error('Error deleting subject:', error));
   }
@@ -241,6 +263,69 @@ export class ProgramManageComponent implements AfterViewInit {
         console.error('Error fetching courses:', error);
       });
   }
+
+  fetchCoursesQuota(): void {
+    const facultyMap: { [key: string]: string } = {
+      fc: 'Faculty of Computing',
+      fke: 'Faculty of Electrical Engineering',
+      fkm: 'Faculty of Mechanical Engineering'
+    };
+
+    this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
+      .subscribe(response => {
+        const allPrograms = [];
+
+        for (const facultyKey in response) {
+          if (response.hasOwnProperty(facultyKey)) {
+            const facultyName = facultyMap[facultyKey] || facultyKey; // fallback if not found
+
+            const facultyPrograms = response[facultyKey].map(p => ({
+              ...p,
+              faculty: facultyName
+            }));
+
+            allPrograms.push(...facultyPrograms);
+          }
+        }
+
+        this.programsQuota = allPrograms;
+      }, error => {
+        console.error('Error fetching courses:', error);
+      });
+  }
+
+  updateQuota(code: string, quota: number) {
+    const existing = this.updatedProgramsQuota.find(p => p.code === code);
+    if (existing) {
+      existing.quota = quota;
+    } else {
+      this.updatedProgramsQuota.push({ code, quota });
+    }
+    console.log('Updated Programs Quota:', this.updatedProgramsQuota);  // Log the updated array
+  }
+
+
+  saveQuota() {
+    console.log('Updated Quotas:', this.updatedProgramsQuota);  // Log the data being sent
+    if (this.updatedProgramsQuota.length === 0) {
+      console.error('No quotas to update!');
+      return;
+    }
+
+    this.http.put('https://localhost:7108/api/Course/updateQuotas', this.updatedProgramsQuota)
+      .subscribe(response => {
+        console.log('Quota updated successfully:', response);
+        this.closeCourseModal();
+        this.snackBar.open('Quota edited successfully!', 'Close', {
+          duration: 2000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+        });
+      }, error => {
+        console.error('Failed to update quota:', error);
+      });
+  }
+
 
   fetchFaculties(): void {
     this.http.get<Faculty[]>('https://localhost:7108/api/Course/faculties')

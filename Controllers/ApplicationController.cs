@@ -226,20 +226,50 @@ namespace sam.Controllers
                 {
                     var pdfDocument = PdfiumViewer.PdfDocument.Load(stream);
 
+                    // for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
+                    // {
+                    //     string pageText = pdfDocument.GetPdfText(pageIndex);
+                    //     if (!string.IsNullOrWhiteSpace(pageText))
+                    //     {
+                    //         isTextBasedPdf = true;
+                    //         extractedText.AppendLine(pageText);
+                    //     }
+                    // }
+
+                    // if (isTextBasedPdf)
+                    // {
+                    //     var extracted = extractedText.ToString();
+                    //     var parsed = ExtractionController.ParseSpmSubjects(extracted);
+
+                    //     return new JsonResult(new
+                    //     {
+                    //         rawText = extracted,
+                    //         parsed = parsed
+                    //     });
+                    // }
+
+                    bool camScannerDetected = false;
+
                     for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
                     {
                         string pageText = pdfDocument.GetPdfText(pageIndex);
                         if (!string.IsNullOrWhiteSpace(pageText))
                         {
+                            if (pageText.Contains("CamScanner", StringComparison.OrdinalIgnoreCase))
+                            {
+                                camScannerDetected = true;
+                                break; // stop checking further; force OCR
+                            }
+
                             isTextBasedPdf = true;
                             extractedText.AppendLine(pageText);
                         }
                     }
 
-                    if (isTextBasedPdf)
+                    if (isTextBasedPdf && !camScannerDetected)
                     {
                         var extracted = extractedText.ToString();
-                        var parsed = ExtractionController.ParseSpmSubjects(extracted);
+                        var parsed = ExtractionController.ParseStpmSubjects(extracted);
 
                         return new JsonResult(new
                         {
@@ -247,6 +277,7 @@ namespace sam.Controllers
                             parsed = parsed
                         });
                     }
+
 
                     // string tessdataPath = Path.Combine(Directory.GetCurrentDirectory(), "tessdata");
                     using var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default);
@@ -313,17 +344,26 @@ namespace sam.Controllers
                 {
                     var pdfDocument = PdfiumViewer.PdfDocument.Load(stream);
 
+
+                    bool camScannerDetected = false;
+
                     for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
                     {
                         string pageText = pdfDocument.GetPdfText(pageIndex);
                         if (!string.IsNullOrWhiteSpace(pageText))
                         {
+                            if (pageText.Contains("CamScanner", StringComparison.OrdinalIgnoreCase))
+                            {
+                                camScannerDetected = true;
+                                break; // stop checking further; force OCR
+                            }
+
                             isTextBasedPdf = true;
                             extractedText.AppendLine(pageText);
                         }
                     }
 
-                    if (isTextBasedPdf)
+                    if (isTextBasedPdf && !camScannerDetected)
                     {
                         var extracted = extractedText.ToString();
                         var parsed = ExtractionController.ParseStpmSubjects(extracted);
@@ -334,6 +374,7 @@ namespace sam.Controllers
                             parsed = parsed
                         });
                     }
+
                     using var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default);
 
                     for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)

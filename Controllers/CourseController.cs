@@ -29,11 +29,41 @@ namespace sam.Controllers
                 .ToDictionary(g => g.Key, g => g.Select(c => new
                 {
                     code = c.CourseCode,
-                    name = c.CourseName
+                    name = c.CourseName,
+                    quota = c.Quota
                 }).ToList());
 
             return Ok(groupedCourses);
         }
+
+        [HttpPut("updateQuotas")]
+        public async Task<IActionResult> UpdateQuotas([FromBody] List<UpdateQuotaDto> updates)
+        {
+            if (updates == null || !updates.Any())
+            {
+                return BadRequest("No quota updates provided.");
+            }
+
+            var courseCodes = updates.Select(u => u.Code).ToList();
+
+            var courses = await _context.Courses
+                .Where(c => courseCodes.Contains(c.CourseCode))
+                .ToListAsync();
+
+            foreach (var update in updates)
+            {
+                var course = courses.FirstOrDefault(c => c.CourseCode == update.Code);
+                if (course != null)
+                {
+                    course.Quota = update.Quota;
+                    _context.Entry(course).State = EntityState.Modified;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
 
         [HttpGet("faculties")]
         public async Task<IActionResult> GetFaculties()
@@ -50,7 +80,7 @@ namespace sam.Controllers
         public async Task<ActionResult<IEnumerable<Subject>>> GetSubjects()
         {
             var sortedSubjects = await _context.Subjects
-                .OrderBy(s => s.Category) 
+                .OrderBy(s => s.Category)
                 .ToListAsync();
 
             return Ok(sortedSubjects);

@@ -17,5 +17,8 @@ namespace sam.Models
          [Required]
         public string? CourseName { get; set; }
 
+        [Required]
+        public int? Quota { get; set; }
+
     }
 }

@@ -256,6 +256,7 @@ export class ViewApplicantsComponent implements OnInit {
 
   closeModal(): void {
     this.isModalOpen = false;
+    this.addForm.reset();
   }
 
   get spmResults(): FormArray {
@@ -494,8 +495,19 @@ export class ViewApplicantsComponent implements OnInit {
   }
 
   openScanModal(): void {
+    const spmResultsLength = this.spmResults.length;
+    const preUResultsLength = this.preUResults.length;
+    if (spmResultsLength > 0) {
+      for (let i = 0; i < spmResultsLength; i++) {
+        this.removeSpmResult(i);
+      }
+    }
+    if (preUResultsLength > 0) {
+      for (let i = 0; i < preUResultsLength; i++) {
+        this.removePreUResult(i);
+      }
+    }
     this.isScanModalOpen = true;
-    //Only allow when there are scanned result
   }
 
   closeAddModal(): void {
