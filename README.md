@@ -20,10 +20,6 @@ taskkill /PID 0000 /F
 ```
 
 ```bash
-taskkill /PID 0000 /F
-```
-
-```bash
 win+r services.msc find MYSQL80 start workbench
 ```
 
