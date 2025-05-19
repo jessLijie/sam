@@ -39,6 +39,16 @@ namespace sam.Controllers
             return await _context.Applications.ToListAsync();
         }
 
+        [HttpGet("by-program/{programCode}")]
+        public async Task<ActionResult<IEnumerable<Application>>> GetApplicationsByProgram(string programCode)
+        {
+            var applications = await _context.Applications
+                .Where(a => a.AppliedProgram == programCode)
+                .ToListAsync();
+
+            return Ok(applications);
+        }
+
         // GET: api/Application/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Application>> GetApplication(int id)

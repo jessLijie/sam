@@ -16,7 +16,7 @@ netstat -a -n -o | findstr :3306
 ```
 
 ```bash
-taskkill /PID 0000 /F
+taskkill /PID 5432 /F
 ```
 
 ```bash

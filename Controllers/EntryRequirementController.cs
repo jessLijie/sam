@@ -12,6 +12,14 @@ namespace sam.Controllers
             _context = context;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllRequirements()
+        {
+            var requirements = await _context.EntryRequirements.ToListAsync();
+            return Ok(requirements);
+        }
+
+
         [HttpGet("general")]
         public async Task<ActionResult<IEnumerable<EntryRequirements>>> GetGeneralRequirements()
         {

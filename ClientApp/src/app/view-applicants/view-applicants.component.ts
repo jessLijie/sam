@@ -162,6 +162,8 @@ export class ViewApplicantsComponent implements OnInit {
       next: (data: Applicants[]) => {
         this.dataSource.data = data;
         this.cdr.markForCheck();
+        this.cdr.detectChanges();
+
       },
       error: (err) => console.error('Error fetching data:', err)
     });
@@ -174,6 +176,7 @@ export class ViewApplicantsComponent implements OnInit {
         return found.name;
       }
     }
+    this.cdr.detectChanges();
     return code;
   }
 

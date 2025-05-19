@@ -277,7 +277,7 @@ export class ProgramManageComponent implements AfterViewInit {
 
         for (const facultyKey in response) {
           if (response.hasOwnProperty(facultyKey)) {
-            const facultyName = facultyMap[facultyKey] || facultyKey; // fallback if not found
+            const facultyName = facultyMap[facultyKey] || facultyKey; 
 
             const facultyPrograms = response[facultyKey].map(p => ({
               ...p,
@@ -301,12 +301,12 @@ export class ProgramManageComponent implements AfterViewInit {
     } else {
       this.updatedProgramsQuota.push({ code, quota });
     }
-    console.log('Updated Programs Quota:', this.updatedProgramsQuota);  // Log the updated array
+    console.log('Updated Programs Quota:', this.updatedProgramsQuota);
   }
 
 
   saveQuota() {
-    console.log('Updated Quotas:', this.updatedProgramsQuota);  // Log the data being sent
+    console.log('Updated Quotas:', this.updatedProgramsQuota);
     if (this.updatedProgramsQuota.length === 0) {
       console.error('No quotas to update!');
       return;

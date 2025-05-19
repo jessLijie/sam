@@ -36,6 +36,28 @@ namespace sam.Controllers
             return Ok(groupedCourses);
         }
 
+        [HttpGet("grouped")]
+        public async Task<IActionResult> GetGroupedCourses()
+        {
+            var courses = await _context.Courses.ToListAsync();
+
+            var groupedCourses = courses
+                .GroupBy(c => c.Faculty)
+                .Select(g => new
+                {
+                    name = g.Key,
+                    programs = g.Select(c => new
+                    {
+                        code = c.CourseCode,
+                        name = c.CourseName,
+                        quota = c.Quota
+                    }).ToList()
+                }).ToList();
+
+            return Ok(groupedCourses);
+        }
+
+
         [HttpPut("updateQuotas")]
         public async Task<IActionResult> UpdateQuotas([FromBody] List<UpdateQuotaDto> updates)
         {
