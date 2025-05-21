@@ -95,13 +95,17 @@ export class ProgramManageComponent implements AfterViewInit {
     this.fetchCategories();
     this.fetchAllSubjects();
     this.fetchCoursesQuota();
+    this.fetchExistingEntryRequirements();
+
   }
   createForm: FormGroup;
   isSpecialSelected: boolean = false;
   isSPM: boolean = false;
   isSTPM: boolean = false;
+  isFoundation: boolean = false;
   isMatriculation: boolean = false;
   isDiploma: boolean = false;
+  isDuplicateEntry: boolean = false;
   displayedColumns: string[] = ['graduate_type', 'requirement', 'grade', 'action'];
   displayedCourseColumns = ['category', 'subjectName', 'actions'];
   generalRequirement: MatTableDataSource<any> = new MatTableDataSource<any>([]);
@@ -136,6 +140,43 @@ export class ProgramManageComponent implements AfterViewInit {
   selectedSubjectId: number | null = null;
   programsQuota: any[] = [];
   updatedProgramsQuota: { code: string; quota: number }[] = [];
+  existingEntryRequirements: any[] = [];
+
+  fetchExistingEntryRequirements(): void {
+    this.http.get<any[]>('https://localhost:7108/api/EntryRequirement')
+      .subscribe(response => {
+        this.existingEntryRequirements = response;
+      }, error => {
+        console.error('Error fetching entry requirements:', error);
+      });
+  }
+
+  checkForDuplicateEntry(): void {
+    const formValue = this.createForm.value;
+
+    this.errorMessage = '';
+    this.isDuplicateEntry = false;
+
+    for (let entry of this.existingEntryRequirements) {
+      const sameCategory = entry.graduate_type === formValue.graduate_type;
+      const sameSubject = entry.subject === formValue.subject;
+      const sameType = entry.requirement_type === formValue.requirement_type;
+
+      let isDuplicate = sameCategory && sameSubject && sameType;
+
+      if (formValue.requirement_type === 'special') {
+        const sameFaculty = entry.faculty === formValue.faculty;
+        const sameProgram = entry.program_code === formValue.program_code;
+        isDuplicate = isDuplicate && sameFaculty && sameProgram;
+      }
+
+      if (isDuplicate) {
+        this.isDuplicateEntry = true;
+        this.errorMessage = '**This entry requirement already exists.';
+        break;
+      }
+    }
+  }
 
 
   openSubjectModal() {
@@ -239,10 +280,14 @@ export class ProgramManageComponent implements AfterViewInit {
       this.selectedSubject = '';
       this.setGradeOptions();
     }
+    this.checkForDuplicateEntry();
+
   }
 
   onSubjectChange(): void {
     this.setGradeOptions();
+    this.checkForDuplicateEntry();
+
   }
 
   setGradeOptions(): void {
@@ -268,7 +313,8 @@ export class ProgramManageComponent implements AfterViewInit {
     const facultyMap: { [key: string]: string } = {
       fc: 'Faculty of Computing',
       fke: 'Faculty of Electrical Engineering',
-      fkm: 'Faculty of Mechanical Engineering'
+      fkm: 'Faculty of Mechanical Engineering',
+      fabu: 'Faculty of Built Environment and Surveying',
     };
 
     this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
@@ -277,7 +323,7 @@ export class ProgramManageComponent implements AfterViewInit {
 
         for (const facultyKey in response) {
           if (response.hasOwnProperty(facultyKey)) {
-            const facultyName = facultyMap[facultyKey] || facultyKey; 
+            const facultyName = facultyMap[facultyKey] || facultyKey;
 
             const facultyPrograms = response[facultyKey].map(p => ({
               ...p,
@@ -520,11 +566,16 @@ export class ProgramManageComponent implements AfterViewInit {
     } else {
       this.isSpecialSelected = false;
     }
+    this.checkForDuplicateEntry();
+  }
+  onFacultyOrProgramChange() {
+    this.checkForDuplicateEntry();
   }
 
   onTypeChangeSubject(event: any) {
     this.isSPM = event.value === 'SPM';
     this.isSTPM = event.value === 'STPM';
+    this.isFoundation = event.value === 'Foundation';
     this.isDiploma = event.value === 'Diploma';
     this.isMatriculation = event.value === 'Matriculation';
   }
@@ -554,8 +605,8 @@ export class ProgramManageComponent implements AfterViewInit {
         return 'spm-tag';
       case 'STPM':
         return 'stpm-tag';
-      // case 'MUET':
-      //   return 'muet-tag';
+      case 'Foundation':
+        return 'muet-tag';
       case 'Diploma':
         return 'diploma-tag';
       case 'Matriculation':

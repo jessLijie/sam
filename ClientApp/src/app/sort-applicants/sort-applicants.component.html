@@ -28,11 +28,11 @@
 
   <!-- Main Content: Applicant Table -->
   <div class="content">
-    <div *ngIf="filteredApplicants.length>0" class="quota-button">
-    <button mat-raised-button color="warn" class="sort-button">
-      Quota: {{ getQuota(selectedProgramCode) }}
-    </button>
-      </div>
+    <div *ngIf="filteredApplicants.length > 0" class="quota-button">
+      <button mat-raised-button color="warn" class="sort-button">
+        Quota: {{ getQuota(selectedProgramCode) }}
+      </button>
+    </div>
     <table
       mat-table
       [dataSource]="filteredApplicants"
@@ -41,10 +41,12 @@
       *ngIf="filteredApplicants.length"
     >
       <!-- ID -->
-      <ng-container matColumnDef="id">
+      <!-- <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef><strong>No.</strong></th>
-        <td mat-cell *matCellDef="let app; let i = index">{{ i + 1 }}</td>
-      </ng-container>
+        <td mat-cell *matCellDef="let app; let i = index">
+          {{ i + 1 }}0000000000
+        </td>
+      </ng-container> -->
 
       <!-- Name -->
       <ng-container matColumnDef="name">
@@ -60,25 +62,41 @@
 
       <!-- General Requirement -->
       <ng-container matColumnDef="general">
-        <th mat-header-cell *matHeaderCellDef><strong>General Requirement</strong></th>
+        <th mat-header-cell *matHeaderCellDef>
+          <strong>General Requirement</strong>
+        </th>
         <td mat-cell *matCellDef="let app">
           <span
             [ngClass]="getRequirementClass(app.generalMet, app.generalTotal)"
           >
             {{ app.generalMet }}/{{ app.generalTotal }}
           </span>
+          <button
+            mat-icon-button
+            (click)="openRequirementDialog(app.generalDetails)"
+          >
+            <mat-icon>info</mat-icon>
+          </button>
         </td>
       </ng-container>
 
       <!-- Special Requirement -->
       <ng-container matColumnDef="special">
-        <th mat-header-cell *matHeaderCellDef><strong>Special Requirement</strong></th>
+        <th mat-header-cell *matHeaderCellDef>
+          <strong>Special Requirement</strong>
+        </th>
         <td mat-cell *matCellDef="let app">
           <span
             [ngClass]="getRequirementClass(app.specialMet, app.specialTotal)"
           >
             {{ app.specialMet }}/{{ app.specialTotal }}
           </span>
+          <button
+            mat-icon-button
+            (click)="openRequirementDialog(app.specialDetails)"
+          >
+            <mat-icon>info</mat-icon>
+          </button>
         </td>
       </ng-container>
 
@@ -96,14 +114,44 @@
       <i>**No applications found. Please select (another) program.</i>
     </div>
 
-    <div *ngIf="filteredApplicants.length>0" class="quota-button">
-    <button mat-raised-button color="primary" class="sort-button">
-      Sort Applicants
-      <mat-icon>sort</mat-icon>
-    </button>
-      </div>
+    <div *ngIf="filteredApplicants.length > 0" class="quota-button">
+      <button mat-raised-button color="primary" class="sort-button">
+        Sort Applicants
+        <mat-icon>sort</mat-icon>
+      </button>
+    </div>
   </div>
 </div>
+
+<ng-template #requirementDialog let-data>
+  <h2 mat-dialog-title style="text-align: center;">Requirements</h2>
+
+  <mat-dialog-content>
+    <div *ngIf="data?.length > 0; else noRequirements">
+      <ng-container *ngFor="let group of groupByGraduateType(data)">
+         <br>
+        <h3 style="text-align: center; font-size: medium; color: black;" ><strong>{{ group.type }}</strong></h3>
+        <div *ngFor="let d of group.items">
+          <span [style.color]="d.met ? 'green' : 'red'">
+            {{ d.subject }}: {{ d.grade }}
+          </span>
+          <span [style.color]="d.met ? 'green' : 'red'">
+            {{ d.met ? "✅" : "❌" }}
+          </span>
+          <br>
+        </div>
+      </ng-container>
+    </div>
+    <ng-template #noRequirements>
+      <p>No available requirements</p>
+    </ng-template>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Close</button>
+  </mat-dialog-actions>
+</ng-template>
+
+
 
 <!-- Send Email Button -->
 <!-- <button mat-fab extended class="send-button" (click)="sendEmail()" disabled>

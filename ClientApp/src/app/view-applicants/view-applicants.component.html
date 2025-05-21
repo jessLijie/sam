@@ -2,20 +2,34 @@
   <div class="info-buttons-container">
     <button mat-fab extended class="info-button">
       STPM<br />
-      23
+      {{ applicantCounts.STPM }}
     </button>
     <mat-icon class="operator-icon">add</mat-icon>
-    <button mat-fab extended class="info-button">Matriculation <br />14</button>
+
+    <button mat-fab extended class="info-button">
+      Matriculation <br />
+      {{ applicantCounts.Matriculation }}
+    </button>
     <mat-icon class="operator-icon">add</mat-icon>
-    <button mat-fab extended class="info-button">Foundation <br />13</button>
+
+    <button mat-fab extended class="info-button">
+      Foundation <br />
+      {{ applicantCounts.Foundation }}
+    </button>
     <mat-icon class="operator-icon">add</mat-icon>
-    <button mat-fab extended class="info-button">Diploma<br />0</button>
+
+    <button mat-fab extended class="info-button">
+      Diploma<br />
+      {{ applicantCounts.Diploma }}
+    </button>
     <mat-icon class="operator-icon">drag_handle</mat-icon>
+
     <button mat-fab extended class="info-button">
       TOTAL <br />
-      50 Applicant(s)
+      {{ totalApplicants }} Applicant(s)
     </button>
   </div>
+
   <br />
   <button mat-fab extended class="scan-button" (click)="openScanModal()">
     Scan
@@ -31,7 +45,10 @@
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <ng-container matColumnDef="id">
     <th mat-header-cell *matHeaderCellDef>No.</th>
-    <td mat-cell *matCellDef="let applicant">{{ applicant.id }}</td>
+    <!-- <td mat-cell *matCellDef="let applicant">{{ applicant.id }}</td> -->
+    <td mat-cell *matCellDef="let applicant; let i = index">
+      {{ i + 1 }}
+    </td>
   </ng-container>
 
   <ng-container matColumnDef="name">
@@ -80,7 +97,11 @@
       <button mat-button (click)="openApplicantDetailModal(applicant)">
         <mat-icon style="color: green">search</mat-icon>
       </button>
-      <button mat-button style="color: red"  (click)="confirmDelete(applicant.id)">
+      <button
+        mat-button
+        style="color: red"
+        (click)="confirmDelete(applicant.id)"
+      >
         <mat-icon>delete</mat-icon>
       </button>
     </td>
@@ -118,7 +139,7 @@
             <td>: {{ app.icNumber }}</td>
           </tr>
           <tr>
-            <td><strong>Address</strong></td>
+            <td><strong>Email Address</strong></td>
             <td>: {{ app.address }}</td>
           </tr>
           <tr>
@@ -251,12 +272,23 @@
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Address:</mat-label>
+          <mat-label>Email Address:</mat-label>
           <input
             matInput
             formControlName="address"
-            placeholder="Enter Address"
+            placeholder="Enter Email Address"
           />
+          <mat-error *ngIf="addForm.get('address')?.hasError('required')">
+            Email is required
+          </mat-error>
+          <mat-error
+            *ngIf="
+              addForm.get('address')?.hasError('email') &&
+              !addForm.get('address')?.hasError('required')
+            "
+          >
+            Invalid email format
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
@@ -451,12 +483,23 @@
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Address:</mat-label>
+          <mat-label>Email Address:</mat-label>
           <input
             matInput
             formControlName="address"
-            placeholder="Enter Address"
+            placeholder="Enter Email Address"
           />
+          <mat-error *ngIf="addForm.get('address')?.hasError('required')">
+            Email is required
+          </mat-error>
+          <mat-error
+            *ngIf="
+              addForm.get('address')?.hasError('email') &&
+              !addForm.get('address')?.hasError('required')
+            "
+          >
+            Invalid email format
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
@@ -539,12 +582,12 @@
       <!-- Pre-U Results Section (Choose One) -->
       <h3>Pre-U Results</h3>
       <input
-      type="file"
-      #stpmFileInput
-      accept="application/pdf"
-      (change)="onStpmFileSelected($event)"
-      style="display: none"
-    />
+        type="file"
+        #stpmFileInput
+        accept="application/pdf"
+        (change)="onStpmFileSelected($event)"
+        style="display: none"
+      />
       <div class="add-result-btn-container">
         <button
           mat-raised-button
@@ -556,7 +599,7 @@
           <mat-icon>scanner</mat-icon>
           Scan {{ addForm.get("preUType")?.value || "Pre-U" }} Result
         </button>
-        <br>
+        <br />
         <small
           *ngIf="!addForm.get('preUType')?.value"
           style="color: red; font-style: italic"
@@ -605,11 +648,11 @@
             type="button"
             (click)="addPreUResult()"
           >
-            <mat-icon>add</mat-icon>Add {{ addForm.get("preUType")?.value || "Pre-U" }} Result
+            <mat-icon>add</mat-icon>Add
+            {{ addForm.get("preUType")?.value || "Pre-U" }} Result
           </button>
         </div>
       </div>
-
 
       <br /><br />
       <!-- Modal Footer -->

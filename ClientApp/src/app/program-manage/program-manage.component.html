@@ -304,7 +304,10 @@
       <!-- Faculty Selection for Special Type -->
       <mat-form-field *ngIf="isSpecialSelected" appearance="fill">
         <mat-label>Faculty</mat-label>
-        <mat-select formControlName="faculty">
+        <mat-select
+          formControlName="faculty"
+          (selectionChange)="onFacultyOrProgramChange()"
+        >
           <mat-option
             *ngFor="let faculty of faculties"
             [value]="faculty.facultyCode"
@@ -320,7 +323,10 @@
         appearance="fill"
       >
         <mat-label>Program</mat-label>
-        <mat-select formControlName="program_code">
+        <mat-select
+          formControlName="program_code"
+          (selectionChange)="onFacultyOrProgramChange()"
+        >
           <mat-option
             *ngFor="let program of getProgramsForFacultyDropdown()"
             [value]="program.code"
@@ -335,7 +341,7 @@
         *ngIf="errorMessage"
         style="color: red; font-size: 14px; margin-top: 10px"
       >
-        {{ errorMessage }}
+        <i>{{ errorMessage }}</i>
       </div>
 
       <!-- Update and Cancel Buttons -->
@@ -346,6 +352,7 @@
           color="primary"
           type="button"
           (click)="submitEntry()"
+          [disabled]="isDuplicateEntry"
         >
           Submit
         </button>
@@ -504,7 +511,7 @@
         <ng-container matColumnDef="quota">
           <th mat-header-cell *matHeaderCellDef>Quota</th>
           <td mat-cell *matCellDef="let program">
-            <mat-form-field appearance="outline" style="width: 90px;">
+            <mat-form-field appearance="outline" style="width: 90px">
               <input
                 matInput
                 type="number"
@@ -521,11 +528,19 @@
 
         <tr
           mat-header-row
-          *matHeaderRowDef="[ 'faculty', 'program_code', 'program_name', 'quota' ]"
+          *matHeaderRowDef="[
+            'faculty',
+            'program_code',
+            'program_name',
+            'quota'
+          ]"
         ></tr>
         <tr
           mat-row
-          *matRowDef="let row; columns: ['faculty', 'program_code', 'program_name', 'quota']"
+          *matRowDef="
+            let row;
+            columns: ['faculty', 'program_code', 'program_name', 'quota']
+          "
         ></tr>
       </table>
 

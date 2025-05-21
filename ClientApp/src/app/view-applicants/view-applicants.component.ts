@@ -70,6 +70,14 @@ export class ViewApplicantsComponent implements OnInit {
   faculties: Faculty[] = [];
   spmPdfFile: File | null = null;
   preUPdfFile: File | null = null;
+  applicantCounts: any = {
+    STPM: 0,
+    Matriculation: 0,
+    Foundation: 0,
+    Diploma: 0
+  };
+
+  totalApplicants = 0;
 
   // Subject option lists
   spmSubjectOptions = [
@@ -144,17 +152,46 @@ export class ViewApplicantsComponent implements OnInit {
       faculty: ['', Validators.required],
       program_code: ['', Validators.required],
       icNumber: ['', Validators.required],
-      address: [''],
+      address: ['',[Validators.required, Validators.email]],
       gender: [''],
       spmResults: this.fb.array([], Validators.required),
       preUResults: this.fb.array([], Validators.required)
     });
+
   }
 
   ngOnInit(): void {
     this.fetchApplicants();
     this.fetchCourses();
     this.fetchFaculties();
+    this.fetchApplicantCounts();
+  }
+
+
+  fetchApplicantCounts(): void {
+    this.http.get<any[]>('https://localhost:7108/api/Application')
+      .subscribe(applicants => {
+            console.log('Fetched applicants:', applicants);
+        // Reset counts
+        this.applicantCounts = {
+          STPM: 0,
+          Matriculation: 0,
+          Foundation: 0,
+          Diploma: 0
+        };
+        this.totalApplicants = 0;
+
+        for (const applicant of applicants) {
+          const type = applicant.preUType?.trim(); // Ensure null-safe and trimmed
+          if (type && this.applicantCounts.hasOwnProperty(type)) {
+            this.applicantCounts[type]++;
+            this.totalApplicants++;
+          }
+        }
+        this.cdr.detectChanges();
+      }, error => {
+        console.error('Error fetching applicants:', error);
+      });
   }
 
   fetchApplicants(): void {
@@ -176,7 +213,6 @@ export class ViewApplicantsComponent implements OnInit {
         return found.name;
       }
     }
-    this.cdr.detectChanges();
     return code;
   }
 
@@ -468,6 +504,7 @@ export class ViewApplicantsComponent implements OnInit {
           });
         }
       });
+      this.fetchApplicantCounts();
 
     } else {
       console.log('Form is invalid');
