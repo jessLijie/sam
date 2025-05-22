@@ -479,6 +479,19 @@ namespace sam.Controllers
             return NoContent();
         }
 
+        [HttpPost("updateStatusBulk/{id}")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusDto dto)
+        {
+            var application = await _context.Applications.FindAsync(id);
+            if (application == null)
+                return NotFound();
+
+            application.ApplicationStatus = dto.Status;
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         private bool ApplicationExists(int id)
         {
             return _context.Applications.Any(e => e.Id == id);

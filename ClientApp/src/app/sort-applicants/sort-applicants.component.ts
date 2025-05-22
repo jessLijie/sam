@@ -11,12 +11,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatSortModule } from '@angular/material/sort';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TemplateRef, ViewChild } from '@angular/core';
+import { tap, catchError, of, forkJoin } from 'rxjs';
 
 export interface Program {
   code: string;
@@ -61,16 +62,18 @@ export class SortApplicantsComponent {
   selectedProgramCode: string = '';
   programs: { [key: string]: Program[] } = {};
   entryRequirements: any[] = [];
+  dataSource = new MatTableDataSource<any>();
   @ViewChild('requirementDialog') requirementDialog!: TemplateRef<any>;
+  @ViewChild('quotaReachedDialog') quotaReachedDialog!: TemplateRef<any>;
+  @ViewChild(MatSort) sort!: MatSort;
 
-
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private dialog: MatDialog) { }
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private dialog: MatDialog,private snackBar: MatSnackBar,
+) { }
   ngOnInit(): void {
     this.fetchCoursesGrouped();
     this.fetchCourses();
     this.fetchEntryRequirements();
   }
-
 
   ngOnChanges(): void {
     this.filterApplicants();
@@ -187,6 +190,8 @@ export class SortApplicantsComponent {
 
         this.filteredApplicants = [...this.applicants];
         this.cdr.detectChanges();
+        this.dataSource.data = [...this.applicants];
+        this.dataSource.sort = this.sort;
       });
   }
 
@@ -207,27 +212,103 @@ export class SortApplicantsComponent {
     }));
   }
 
-  generateTooltip(met: any[], unmet: any[]): string {
-    let tooltip = '';
-    if (met.length > 0) {
-      tooltip += '✅ Met:\n';
-      for (const req of met) {
-        tooltip += `• ${req.subject}: required ${req.grade}, got ${req.actualGrade}\n`;
+  // generateTooltip(met: any[], unmet: any[]): string {
+  //   let tooltip = '';
+  //   if (met.length > 0) {
+  //     tooltip += '✅ Met:\n';
+  //     for (const req of met) {
+  //       tooltip += `• ${req.subject}: required ${req.grade}, got ${req.actualGrade}\n`;
+  //     }
+  //   }
+  //   if (unmet.length > 0) {
+  //     tooltip += '\n❌ Unmet:\n';
+  //     for (const req of unmet) {
+  //       tooltip += `• ${req.subject}: required ${req.grade}, got ${req.actualGrade}\n`;
+  //     }
+  //   }
+  //   return tooltip.trim();
+  // }
+
+  // getRequirementTooltip(details: { subject: string; grade: string; met: boolean }[]): string {
+  //   return details.map(d =>
+  //     `${d.subject}: ${d.grade} <span style="color: ${d.met ? 'green' : 'red'}">${d.met ? '✓' : '✗'}</span>`
+  //   ).join('<br/>');
+  // }
+
+  sortApplicantsAndApprove() {
+    if (!this.selectedProgramCode) {
+      alert("Please select a program first.");
+      return;
+    }
+
+    const quota = this.getQuota(this.selectedProgramCode);
+    let approvedCount = this.applicants.filter(a => a.status === 'approved').length;
+
+    const eligibleApplicants = this.applicants.filter(app =>
+      app.generalMet === app.generalTotal &&
+      app.specialMet === app.specialTotal &&
+      app.status !== 'approved'
+    );
+
+    const toApprove = [];
+
+    for (const app of eligibleApplicants) {
+      if (approvedCount < quota) {
+        toApprove.push(app);
+        approvedCount++;
+      } else {
+        break;
       }
     }
-    if (unmet.length > 0) {
-      tooltip += '\n❌ Unmet:\n';
-      for (const req of unmet) {
-        tooltip += `• ${req.subject}: required ${req.grade}, got ${req.actualGrade}\n`;
-      }
+
+    if (toApprove.length === 0) {
+      // alert("No applicants eligible or quota already filled.");
+      this.dialog.open(this.quotaReachedDialog);
+      return;
     }
-    return tooltip.trim();
+
+    // Send approved status to backend for selected applications
+    const updateRequests = toApprove.map(app => {
+      return this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+        status: 'approved'
+      }).pipe(
+        tap(() => {
+          app.status = 'approved'; // only update locally if backend confirms
+          console.log("Approved: ", app.name);
+          ; // update locally
+          this.snackBar.open(`Approved: ${app.name}`, 'Close', {
+            duration: 2000,
+            horizontalPosition: 'right',
+            verticalPosition: 'top',
+          });
+        }),
+        catchError(err => {
+          console.error("Error approving applicant", app.name, err);
+          return of(null);
+        })
+      );
+    });
+
+    // Wait for all HTTP requests to complete
+    forkJoin(updateRequests).subscribe(() => {
+      this.filteredApplicants = [...this.applicants];
+      this.cdr.detectChanges();
+    });
   }
 
-  getRequirementTooltip(details: { subject: string; grade: string; met: boolean }[]): string {
-    return details.map(d =>
-      `${d.subject}: ${d.grade} <span style="color: ${d.met ? 'green' : 'red'}">${d.met ? '✅' : '❌'}</span>`
-    ).join('<br/>');
+  getApprovedCount(programCode: string): number {
+    return this.applicants.filter(
+      a => a.appliedProgram === programCode && a.applicationStatus === 'approved'
+    ).length;
+  }
+
+  isQuotaFull(): boolean {
+    if (!this.selectedProgramCode) return true;
+
+    const approvedCount = this.getApprovedCount(this.selectedProgramCode);
+    const quota = this.getQuota(this.selectedProgramCode);
+
+    return approvedCount >= quota;
   }
 
   meetsRequirement(req: any, spm: any, preu: any): boolean {
@@ -285,6 +366,7 @@ export class SortApplicantsComponent {
     this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
       .subscribe(response => {
         this.programs = response;
+        this.cdr.detectChanges();
       }, error => {
         console.error('Error fetching courses:', error);
       });
@@ -307,6 +389,20 @@ export class SortApplicantsComponent {
     this.filteredApplicants = this.applicants.filter(app =>
       app.name.toLowerCase().includes(term) || app.ic.toLowerCase().includes(term)
     );
+    this.cdr.detectChanges();
+  }
+
+  getStatusClass(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return 'badge-approved';
+      case 'rejected':
+        return 'badge-rejected';
+      case 'pending':
+        return 'badge-pending';
+      default:
+        return 'badge-default';
+    }
   }
 
   sendEmail() {

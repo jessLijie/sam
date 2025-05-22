@@ -30,15 +30,19 @@
   <div class="content">
     <div *ngIf="filteredApplicants.length > 0" class="quota-button">
       <button mat-raised-button color="warn" class="sort-button">
-        Quota: {{ getQuota(selectedProgramCode) }}
+        Quota: {{ getApprovedCount(selectedProgramCode) }}/{{
+          getQuota(selectedProgramCode)
+        }}
       </button>
     </div>
+    <br /><br />
     <table
       mat-table
-      [dataSource]="filteredApplicants"
+      [dataSource]="dataSource"
       class="mat-elevation-z8"
       multiTemplateDataRows
       *ngIf="filteredApplicants.length"
+      matSort
     >
       <!-- ID -->
       <!-- <ng-container matColumnDef="id">
@@ -50,7 +54,9 @@
 
       <!-- Name -->
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef><strong>Name</strong></th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          <strong>Name</strong>
+        </th>
         <td mat-cell *matCellDef="let app">{{ app.name }}</td>
       </ng-container>
 
@@ -103,7 +109,14 @@
       <!-- Status -->
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef><strong>Status</strong></th>
-        <td mat-cell *matCellDef="let app">{{ app.applicationStatus }}</td>
+        <td mat-cell *matCellDef="let app">
+          <span
+            [ngClass]="getStatusClass(app.applicationStatus)"
+            class="status-badge"
+          >
+            {{ app.applicationStatus | titlecase }}
+          </span>
+        </td>
       </ng-container>
 
       <!-- Table Headers and Rows -->
@@ -114,31 +127,47 @@
       <i>**No applications found. Please select (another) program.</i>
     </div>
 
+    <br />
     <div *ngIf="filteredApplicants.length > 0" class="quota-button">
-      <button mat-raised-button color="primary" class="sort-button">
+      <button
+        mat-raised-button
+        color="primary"
+        class="sort-button"
+        (click)="sortApplicantsAndApprove()"
+        [disabled]="isQuotaFull()"
+      >
         Sort Applicants
         <mat-icon>sort</mat-icon>
       </button>
+      <br /><br />
+      <div
+        *ngIf="isQuotaFull()"
+        style="float: right; color: red; margin-top: 4px"
+      >
+        <i>**Maximum quota is reached</i>
+      </div>
     </div>
   </div>
 </div>
 
 <ng-template #requirementDialog let-data>
-  <h2 mat-dialog-title style="text-align: center;">Requirements</h2>
+  <h2 mat-dialog-title style="text-align: center">Requirements</h2>
 
   <mat-dialog-content>
     <div *ngIf="data?.length > 0; else noRequirements">
       <ng-container *ngFor="let group of groupByGraduateType(data)">
-         <br>
-        <h3 style="text-align: center; font-size: medium; color: black;" ><strong>{{ group.type }}</strong></h3>
+        <br />
+        <h3 style="text-align: center; font-size: medium; color: black">
+          <strong>{{ group.type }}</strong>
+        </h3>
         <div *ngFor="let d of group.items">
           <span [style.color]="d.met ? 'green' : 'red'">
             {{ d.subject }}: {{ d.grade }}
           </span>
           <span [style.color]="d.met ? 'green' : 'red'">
-            {{ d.met ? "✅" : "❌" }}
+            {{ d.met ? "✓" : "✗" }}
           </span>
-          <br>
+          <br />
         </div>
       </ng-container>
     </div>
@@ -151,7 +180,16 @@
   </mat-dialog-actions>
 </ng-template>
 
-
+<ng-template #quotaReachedDialog>
+  <h2 mat-dialog-title>Failed sorting</h2>
+  <mat-dialog-content
+    >No applicants eligible or;<br />
+    Quota already filled.</mat-dialog-content
+  >
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>OK</button>
+  </mat-dialog-actions>
+</ng-template>
 
 <!-- Send Email Button -->
 <!-- <button mat-fab extended class="send-button" (click)="sendEmail()" disabled>

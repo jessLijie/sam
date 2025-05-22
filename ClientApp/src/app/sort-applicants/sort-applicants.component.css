@@ -65,3 +65,30 @@
   max-width: 300px;
 }
 
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: bold;
+  text-transform: capitalize;
+  display: inline-block;
+  min-width: 70px;
+  text-align: center;
+  color: white;
+}
+
+.badge-approved {
+  background-color: #4caf50; /* green */
+}
+
+.badge-rejected {
+  background-color: #f44336; /* red */
+}
+
+.badge-pending {
+  background-color: #ff9800; /* orange */
+}
+
+.badge-default {
+  background-color: #9e9e9e; /* grey */
+}

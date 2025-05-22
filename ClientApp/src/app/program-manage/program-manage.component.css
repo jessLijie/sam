@@ -133,7 +133,7 @@ mat-form-field {
 .category-tag {
   display: inline-block;
   padding: 6px 12px;
-  border-radius: 20px;
+  border-radius: 12px;
   font-size: 14px;
   color: white;
   font-weight: bold;
@@ -231,7 +231,7 @@ mat-form-field {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;  
+  z-index: 1000;
 }
 
 .course-modal-custom {

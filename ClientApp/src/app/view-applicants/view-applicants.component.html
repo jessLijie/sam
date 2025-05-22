@@ -86,9 +86,6 @@
   </div>
 </div>
 
-<div *ngIf="dataSource?.data?.length === 0" style="text-align: center; padding: 1em;">
-  No applicants found.
-</div>
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort
 >
   <ng-container matColumnDef="id">
@@ -158,6 +155,10 @@
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 </table>
+
+<div *ngIf="dataSource?.filteredData?.length === 0" style="text-align: center; padding: 1em;">
+  <i>**No applicants found under this category(s)</i>
+</div>
 
 <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
