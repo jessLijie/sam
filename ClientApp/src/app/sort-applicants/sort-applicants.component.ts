@@ -232,7 +232,7 @@ export class SortApplicantsComponent {
 
   meetsRequirement(req: any, spm: any, preu: any): boolean {
     const gradeRank: any = {
-      'A+': 1, 'A': 2, 'A-': 3, 'B+': 4, 'B': 5, 'B-': 6,
+      'A+': 1, 'A': 1, 'A-': 2, 'B+': 3, 'B': 5, 'B-': 6,
       'C+': 7, 'C': 8, 'C-': 9, 'D': 10, 'E': 11, 'G': 12,
       '4.0': 1, '3.67': 2, '3.33': 3, '3.0': 4, '3.00': 4, '2.0': 5, '1.0': 6
     };

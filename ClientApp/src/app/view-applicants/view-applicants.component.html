@@ -31,18 +31,66 @@
   </div>
 
   <br />
-  <button mat-fab extended class="scan-button" (click)="openScanModal()">
-    Scan
-    <mat-icon>scanner</mat-icon>
-  </button>
+  <div
+    style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem"
+  >
+    <mat-form-field appearance="fill">
+      <mat-label>Filter by Pre-U</mat-label>
+      <mat-select
+        [(value)]="selectedPreUType"
+        (selectionChange)="applyFilter()"
+      >
+        <mat-option value="">All</mat-option>
+        <mat-option value="STPM">STPM</mat-option>
+        <mat-option value="Matriculation">Matriculation</mat-option>
+        <mat-option value="Foundation">Foundation</mat-option>
+        <mat-option value="Diploma">Diploma</mat-option>
+      </mat-select>
+    </mat-form-field>
 
-  <button mat-fab extended class="add-button" (click)="openAddModal()">
-    Add
-    <mat-icon>add</mat-icon>
-  </button>
+    <mat-form-field appearance="fill">
+      <mat-label>Filter by Faculty</mat-label>
+      <mat-select
+        [(value)]="selectedFaculty"
+        (selectionChange)="onFacultyChange()"
+      >
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let fac of faculties" [value]="fac.facultyCode">
+          {{ fac.faculty }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Filter by Program</mat-label>
+      <mat-select
+        [(value)]="selectedProgram"
+        (selectionChange)="applyFilter()"
+        [disabled]="programDropdownDisabled"
+      >
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let name of filteredProgramNames" [value]="name">
+          {{ name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-fab extended class="scan-button" (click)="openScanModal()">
+      Scan
+      <mat-icon>scanner</mat-icon>
+    </button>
+    <button mat-fab extended class="add-button" (click)="openAddModal()">
+      Add
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
 </div>
 
-<table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+<div *ngIf="dataSource?.data?.length === 0" style="text-align: center; padding: 1em;">
+  No applicants found.
+</div>
+<table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort
+>
   <ng-container matColumnDef="id">
     <th mat-header-cell *matHeaderCellDef>No.</th>
     <!-- <td mat-cell *matCellDef="let applicant">{{ applicant.id }}</td> -->
@@ -52,7 +100,7 @@
   </ng-container>
 
   <ng-container matColumnDef="name">
-    <th mat-header-cell *matHeaderCellDef>Name</th>
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
     <td mat-cell *matCellDef="let applicant">{{ applicant.name }}</td>
   </ng-container>
 

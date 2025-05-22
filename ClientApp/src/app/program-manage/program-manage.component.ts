@@ -142,6 +142,7 @@ export class ProgramManageComponent implements AfterViewInit {
   updatedProgramsQuota: { code: string; quota: number }[] = [];
   existingEntryRequirements: any[] = [];
 
+
   fetchExistingEntryRequirements(): void {
     this.http.get<any[]>('https://localhost:7108/api/EntryRequirement')
       .subscribe(response => {

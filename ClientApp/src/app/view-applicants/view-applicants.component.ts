@@ -11,14 +11,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatSortModule } from '@angular/material/sort';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 export interface Applicants {
   id: number;
   name: string;
-  pre_u: string;
+  preUType: string;
   spm_result: string;
-  applied_program: string;
+  appliedProgram: string;
 }
 
 export interface Faculty {
@@ -30,6 +30,8 @@ export interface Program {
   code: string;
   name: string;
 }
+
+type CoursesData = { [facultyCode: string]: Program[] };
 
 @Component({
   selector: 'app-view-applicants',
@@ -78,6 +80,13 @@ export class ViewApplicantsComponent implements OnInit {
   };
 
   totalApplicants = 0;
+  selectedPreUType = '';
+  selectedFaculty = '';
+  selectedProgram = '';
+  programNames: string[] = [];
+  filteredProgramNames: string[] = [];
+  programDropdownDisabled = true;
+  coursesData: CoursesData = {};
 
   // Subject option lists
   spmSubjectOptions = [
@@ -152,7 +161,7 @@ export class ViewApplicantsComponent implements OnInit {
       faculty: ['', Validators.required],
       program_code: ['', Validators.required],
       icNumber: ['', Validators.required],
-      address: ['',[Validators.required, Validators.email]],
+      address: ['', [Validators.required, Validators.email]],
       gender: [''],
       spmResults: this.fb.array([], Validators.required),
       preUResults: this.fb.array([], Validators.required)
@@ -165,13 +174,100 @@ export class ViewApplicantsComponent implements OnInit {
     this.fetchCourses();
     this.fetchFaculties();
     this.fetchApplicantCounts();
+
+    this.dataSource.filterPredicate = (data: Applicants, filter: string) => {
+      const filterValue = JSON.parse(filter);
+
+      const appliedProgramCode = data.appliedProgram || '';
+
+      const faculty = this.getFacultyByProgramCode(appliedProgramCode);
+      const facultyMatch = filterValue.faculty ?
+        faculty?.toLowerCase() === filterValue.faculty.toLowerCase() : true;
+
+      const programName = this.getProgramName(appliedProgramCode);
+      const programMatch = filterValue.program ?
+        programName?.toLowerCase() === filterValue.program.toLowerCase() : true;
+
+      const preUTypeMatch = filterValue.preUType ?
+        data.preUType?.toLowerCase() === filterValue.preUType.toLowerCase() : true;
+      console.log('Filter:', filterValue);
+      console.log('Program:', data.appliedProgram);
+      console.log('Program Name:', this.getProgramName(data.appliedProgram));
+      console.log('PreU Type:', data.preUType);
+      console.log('PreU Type Match:', preUTypeMatch);
+      console.log('Faculty Match:', facultyMatch);
+      console.log('Program Match:', programMatch);
+      console.log('-----------------------------------');
+
+      return preUTypeMatch && facultyMatch && programMatch;
+    };
+
+  }
+
+  getFacultyByProgramCode(code: string): string | null {
+    if (!code) return null;
+
+    // Iterate through faculties
+    for (const facultyKey of Object.keys(this.coursesData)) {
+      const courses = this.coursesData[facultyKey];
+      if (courses.find(course => course.code === code)) {
+        return facultyKey;  // Return the faculty key (like 'fc', 'fkm', etc)
+      }
+    }
+
+    return null;  // Not found
+  }
+
+  getProgramName(code: string): string | null {
+    if (!code) return null;
+
+    for (const facultyKey of Object.keys(this.coursesData)) {
+      const courses = this.coursesData[facultyKey];
+      const course = courses.find(course => course.code === code);
+      if (course) return course.name;
+    }
+
+    return null;
+  }
+
+
+  onFacultyChange(): void {
+    if (this.selectedFaculty) {
+      this.filteredProgramNames = this.programs[this.selectedFaculty].map(p => p.name);
+      this.programDropdownDisabled = false;  // enable program dropdown
+    } else {
+      this.filteredProgramNames = [...this.programNames];
+      this.programDropdownDisabled = true;   // disable program dropdown
+      this.selectedProgram = '';              // reset selected program
+    }
+
+    this.selectedProgram = '';  // reset program filter regardless
+    this.applyFilter();
+  }
+
+  applyFilter(): void {
+    console.log('Current filters:', {
+      preU: this.selectedPreUType,
+      faculty: this.selectedFaculty,
+      program: this.selectedProgram
+    });
+
+    const filterObj = {
+      preUType: this.selectedPreUType,
+      faculty: this.selectedFaculty,
+      program: this.selectedProgram
+    };
+
+
+    this.dataSource.filter = JSON.stringify(filterObj);
+    this.cdr.detectChanges();
   }
 
 
   fetchApplicantCounts(): void {
     this.http.get<any[]>('https://localhost:7108/api/Application')
       .subscribe(applicants => {
-            console.log('Fetched applicants:', applicants);
+        console.log('Fetched applicants:', applicants);
         // Reset counts
         this.applicantCounts = {
           STPM: 0,
@@ -194,26 +290,19 @@ export class ViewApplicantsComponent implements OnInit {
       });
   }
 
+  @ViewChild(MatSort) sort!: MatSort;
+
+
   fetchApplicants(): void {
     this.http.get<Applicants[]>(this.apiUrl).subscribe({
       next: (data: Applicants[]) => {
         this.dataSource.data = data;
         this.cdr.markForCheck();
         this.cdr.detectChanges();
-
+        this.dataSource.sort = this.sort;
       },
       error: (err) => console.error('Error fetching data:', err)
     });
-  }
-
-  getProgramName(code: string): string {
-    for (const faculty in this.programs) {
-      const found = this.programs[faculty].find(program => program.code === code);
-      if (found) {
-        return found.name;
-      }
-    }
-    return code;
   }
 
   fetchFaculties(): void {
@@ -226,11 +315,16 @@ export class ViewApplicantsComponent implements OnInit {
   }
 
   fetchCourses(): void {
-    this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
-      .subscribe(response => {
-        this.programs = response;
-      }, error => {
-        console.error('Error fetching courses:', error);
+    this.http
+      .get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
+      .subscribe({
+        next: res => {
+          this.programs = res;
+
+
+          this.coursesData = res;
+        },
+        error: err => console.error('Error fetching courses:', err)
       });
   }
 
