@@ -24,6 +24,7 @@ export interface Program {
   name: string;
   quota: number;
 }
+
 @Component({
   selector: 'app-sort-applicants',
   standalone: true,
@@ -63,12 +64,24 @@ export class SortApplicantsComponent {
   programs: { [key: string]: Program[] } = {};
   entryRequirements: any[] = [];
   dataSource = new MatTableDataSource<any>();
+  selectedLecturer: string | null = null;
+  sortedApplications: any = [];
+  displayedColumnsReport: string[] = ['id', 'name', 'ic', 'appliedProgram', 'email', 'status'];
+
+  lecturers = [
+    { name: 'Dr. Aziz', email: 'aziz@university.edu' },
+    { name: 'Prof. Lim', email: 'lim@university.edu' },
+    { name: 'Dr. Aisha', email: 'aisha@university.edu' }
+  ];
+
   @ViewChild('requirementDialog') requirementDialog!: TemplateRef<any>;
   @ViewChild('quotaReachedDialog') quotaReachedDialog!: TemplateRef<any>;
+  @ViewChild('reportDialog') reportDialog!: TemplateRef<any>;
+
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private dialog: MatDialog,private snackBar: MatSnackBar,
-) { }
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private dialog: MatDialog, private snackBar: MatSnackBar,
+  ) { }
   ngOnInit(): void {
     this.fetchCoursesGrouped();
     this.fetchCourses();
@@ -77,6 +90,7 @@ export class SortApplicantsComponent {
 
   ngOnChanges(): void {
     this.filterApplicants();
+    this.cdr.detectChanges();
   }
 
   openRequirementDialog(requirements: any[]) {
@@ -84,12 +98,34 @@ export class SortApplicantsComponent {
       data: requirements
     });
   }
+  viewSortedReport() {
+    this.getSortedApplications().subscribe(data => {
+      console.log('API data:', data);
+      this.sortedApplications = data;
+      this.dialog.open(this.reportDialog);
+    });
+  }
+
+
+
+  openReportDialog() {
+    this.dialog.open(this.reportDialog, {
+      data: this.sortedApplications
+    });
+
+  }
+
+  getSortedApplications() {
+    return this.http.get<any[]>(`https://localhost:7108/api/Application/sorted-report`);
+  }
+
 
   fetchCoursesGrouped() {
     this.http.get<any[]>('https://localhost:7108/api/Course/grouped')
       .subscribe(data => {
         this.faculties = data;
         this.cdr.detectChanges();
+        this.cdr.markForCheck();
       });
   }
   getRequirementClass(met: number, total: number): string {
@@ -235,6 +271,7 @@ export class SortApplicantsComponent {
   //   ).join('<br/>');
   // }
 
+
   sortApplicantsAndApprove() {
     if (!this.selectedProgramCode) {
       alert("Please select a program first.");
@@ -247,7 +284,7 @@ export class SortApplicantsComponent {
     const eligibleApplicants = this.applicants.filter(app =>
       app.generalMet === app.generalTotal &&
       app.specialMet === app.specialTotal &&
-      app.status !== 'approved'
+      app.applicationStatus !== 'approved'
     );
 
     const toApprove = [];
@@ -263,7 +300,12 @@ export class SortApplicantsComponent {
 
     if (toApprove.length === 0) {
       // alert("No applicants eligible or quota already filled.");
-      this.dialog.open(this.quotaReachedDialog);
+      if (toApprove.length === 0) {
+        this.dialog.open(this.quotaReachedDialog, {
+          data: { message: 'No eligible applicants found.' }
+        });
+        return;
+      }
       return;
     }
 
@@ -274,7 +316,7 @@ export class SortApplicantsComponent {
       }).pipe(
         tap(() => {
           app.status = 'approved'; // only update locally if backend confirms
-          console.log("Approved: ", app.name);
+          console.log("Approval(s) success!");
           ; // update locally
           this.snackBar.open(`Approved: ${app.name}`, 'Close', {
             duration: 2000,
@@ -313,9 +355,31 @@ export class SortApplicantsComponent {
 
   meetsRequirement(req: any, spm: any, preu: any): boolean {
     const gradeRank: any = {
-      'A+': 1, 'A': 1, 'A-': 2, 'B+': 3, 'B': 5, 'B-': 6,
-      'C+': 7, 'C': 8, 'C-': 9, 'D': 10, 'E': 11, 'G': 12,
-      '4.0': 1, '3.67': 2, '3.33': 3, '3.0': 4, '3.00': 4, '2.0': 5, '1.0': 6
+      'A+': 1, 'A': 1,
+      'A-': 2,
+      'B+': 3,
+      'B': 4,
+      'B-': 5,
+      'C+': 6,
+      'C': 7,
+      'C-': 8,
+      'D+': 9,
+      'D': 10,
+      'D-': 11,
+      'F': 12, 'E': 12,
+
+      '4.0': 1, '4.00': 1,
+      '3.67': 2,
+      '3.33': 3,
+      '3.0': 4, '3.00': 4,
+      '2.67': 5,
+      '2.33': 6,
+      '2.0': 7, '2.00': 7,
+      '1.67': 8,
+      '1.33': 9,
+      '1.0': 10, '1.00': 10,
+      '0.67': 11,
+      '0.0': 12, '0.00': 12,
     };
 
     const subject = req.subject;
@@ -406,13 +470,14 @@ export class SortApplicantsComponent {
   }
 
   sendEmail() {
-    if (!this.selectedEmail || !this.emailMessage) {
+    if (!this.selectedLecturer) return;
+    if (!this.selectedLecturer || !this.emailMessage) {
       alert('Please select an email and enter a message.');
       return;
     }
 
     const emailData = {
-      to: this.selectedEmail,
+      to: this.selectedLecturer,
       subject: 'Automated Email from AIROST',
       body: this.emailMessage
     };
@@ -424,4 +489,6 @@ export class SortApplicantsComponent {
         alert('Error sending email:' + error);
       });
   }
+
+
 }

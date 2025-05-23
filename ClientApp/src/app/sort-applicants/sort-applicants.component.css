@@ -1,13 +1,38 @@
 :host {
   display: block;
 }
+.send-email-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* space between dropdown and button */
+}
+
+.lecturer-dropdown {
+  flex: 1; /* optional: let dropdown grow */
+  min-width: 200px; /* prevent being too small */
+}
+
 .send-button {
-  border: #197806;
-  margin-right: 20px;
+  margin-right: 0; /* Remove if using gap */
+  margin-bottom: 25px;
   background-color: #197806;
-  border-radius: .5rem;
-  cursor: pointer;
+  border-radius: 0.5rem;
   color: #ffffff;
+  border: none;
+}
+
+.report-button {
+  margin-right: 0; /* Remove if using gap */
+  margin-bottom: 25px;
+  background-color: #840808;
+  border-radius: 0.5rem;
+  color: #ffffff;
+  border: none;
+}
+.send-button:disabled {
+  background-color: #9e9e9e; /* grey */
+  color: #ffffff;
+  cursor: not-allowed;
 }
 
 .main-container {

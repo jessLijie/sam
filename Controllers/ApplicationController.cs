@@ -492,6 +492,33 @@ namespace sam.Controllers
             return NoContent();
         }
 
+        [HttpGet("sorted-report")]
+        public async Task<IActionResult> GetSortedApplicationsReport()
+        {
+            var report = await _context.Applications
+                .Join(
+                    _context.Applicants,
+                    app => app.Applicants.First().ApplicationId,
+                    applicant => applicant.Id,
+                    (app, applicant) => new
+                    {
+                        app.Id,
+                        app.Name,
+                        applicant.IcNumber,
+                        app.AppliedProgram,
+                        applicant.Address,
+                        app.ApplicationStatus
+                    }
+                )
+                .OrderBy(a => a.ApplicationStatus == "Approved" ? 0 :
+                              a.ApplicationStatus == "Pending" ? 1 : 2) // Approved -> Pending -> Others
+                .ThenBy(a => a.Name)
+                .ToListAsync();
+
+            return Ok(report);
+        }
+
+
         private bool ApplicationExists(int id)
         {
             return _context.Applications.Any(e => e.Id == id);

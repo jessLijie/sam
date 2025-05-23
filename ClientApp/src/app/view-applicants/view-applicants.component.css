@@ -1,6 +1,7 @@
 :host {
   display: block;
 }
+
 table {
   width: 100%;
   box-shadow: none;
@@ -40,6 +41,7 @@ th {
   display: flex;
   align-items: center;
 }
+
 .scan-button {
   border: #063f78;
   background-color: #063f78;
@@ -47,6 +49,8 @@ th {
   float: right;
   cursor: pointer;
   color: #ffffff;
+  margin-bottom: 25px;
+
 }
 
 .scan-button:hover {
@@ -56,6 +60,7 @@ th {
   cursor: pointer;
   color: #ffffff;
 }
+
 .add-button {
   border: #197806;
   margin-right: 20px;
@@ -64,6 +69,8 @@ th {
   float: right;
   cursor: pointer;
   color: #ffffff;
+  margin-bottom: 25px;
+
 }
 
 .add-button:hover {
@@ -73,18 +80,22 @@ th {
   cursor: pointer;
   color: #ffffff;
 }
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent background */
+  background-color: rgba(0, 0, 0, 0.5);
+  /* semi-transparent background */
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  h2, h5{
+
+  h2,
+  h5 {
     text-align: center;
   }
 }
@@ -97,6 +108,7 @@ th {
   max-height: 90%;
   overflow-y: auto;
 }
+
 .result-table.borderless {
   width: 70%;
   border-collapse: collapse;
@@ -109,7 +121,7 @@ th {
 }
 
 .result-table.borderless tr {
-  border-bottom: 1px solid transparent; 
+  border-bottom: 1px solid transparent;
 }
 
 .result-table {
@@ -131,10 +143,11 @@ th {
 }
 
 
-.close-button{
+.close-button {
   width: auto;
   padding: 10px 0;
 }
+
 .add-modal-overlay {
   position: fixed;
   top: 0;

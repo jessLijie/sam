@@ -38,6 +38,7 @@ input {
   float: right;
   cursor: pointer;
   color: #ffffff;
+  margin-bottom: 25px;
 }
 
 .manage-button{
@@ -48,6 +49,7 @@ input {
   cursor: pointer;
   color: #ffffff;
   margin-right: 5px;
+  margin-bottom: 25px;
 }
 
 .add-button:hover {
@@ -212,7 +214,7 @@ mat-form-field {
 
 .subject-button{
   margin-right: 5px;
-  margin-bottom: 10px;
+  margin-bottom: 25px;
   float: right;
 }
 
