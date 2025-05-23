@@ -12,7 +12,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatTable, MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -77,6 +77,7 @@ export class SortApplicantsComponent {
   @ViewChild('requirementDialog') requirementDialog!: TemplateRef<any>;
   @ViewChild('quotaReachedDialog') quotaReachedDialog!: TemplateRef<any>;
   @ViewChild('reportDialog') reportDialog!: TemplateRef<any>;
+  @ViewChild(MatTable) table!: MatTable<any>;
 
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -284,7 +285,8 @@ export class SortApplicantsComponent {
     const eligibleApplicants = this.applicants.filter(app =>
       app.generalMet === app.generalTotal &&
       app.specialMet === app.specialTotal &&
-      app.applicationStatus !== 'approved'
+      app.applicationStatus !== 'approved' &&
+      app.status !== 'approved'
     );
 
     const toApprove = [];
@@ -317,12 +319,15 @@ export class SortApplicantsComponent {
         tap(() => {
           app.status = 'approved'; // only update locally if backend confirms
           console.log("Approval(s) success!");
-          ; // update locally
-          this.snackBar.open(`Approved: ${app.name}`, 'Close', {
+          this.snackBar.open(`Approval(s) success!`, 'Close', {
             duration: 2000,
             horizontalPosition: 'right',
             verticalPosition: 'top',
           });
+          this.cdr.detectChanges();
+          this.table.renderRows();
+          this.selectProgram(this.selectedProgramCode); 
+
         }),
         catchError(err => {
           console.error("Error approving applicant", app.name, err);
