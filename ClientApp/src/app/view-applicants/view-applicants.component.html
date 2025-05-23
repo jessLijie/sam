@@ -442,7 +442,7 @@
           type="button"
           (click)="addPreUResult()"
         >
-          <mat-icon>add</mat-icon> Add Pre-U Result
+            <mat-icon>add</mat-icon>Add {{ addForm.get("preUType")?.value || "Pre-U" }} Result
         </button>
       </div>
 
@@ -711,6 +711,7 @@
           color="primary"
           type="submit"
           style="margin-right: 10px"
+          [disabled]="addForm.invalid"
         >
           Submit
         </button>

@@ -646,11 +646,15 @@ export class ViewApplicantsComponent implements OnInit {
 
   closeAddModal(): void {
     this.isAddModalOpen = false;
+    this.addForm.reset();
+
   }
 
 
   closeScanModal(): void {
     this.isScanModalOpen = false;
+    this.addForm.reset();
+
   }
 
   deleteApplicant(id: number): void {
