@@ -304,7 +304,7 @@ export class SortApplicantsComponent {
       // alert("No applicants eligible or quota already filled.");
       if (toApprove.length === 0) {
         this.dialog.open(this.quotaReachedDialog, {
-          data: { message: 'No eligible applicants found.' }
+          data: { message: 'No eligible applicant(s) found.' }
         });
         return;
       }
@@ -326,7 +326,7 @@ export class SortApplicantsComponent {
           });
           this.cdr.detectChanges();
           this.table.renderRows();
-          this.selectProgram(this.selectedProgramCode); 
+          this.selectProgram(this.selectedProgramCode);
 
         }),
         catchError(err => {
