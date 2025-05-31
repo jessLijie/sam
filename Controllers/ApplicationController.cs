@@ -18,6 +18,12 @@ using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.CV.CvEnum;
 using System.Drawing;
+using MimeKit;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using Microsoft.AspNetCore.Http;
+using System.IO;
+using sam.Models;
 
 namespace sam.Controllers
 {
@@ -279,7 +285,7 @@ namespace sam.Controllers
                     if (isTextBasedPdf && !camScannerDetected)
                     {
                         var extracted = extractedText.ToString();
-                        var parsed = ExtractionController.ParseStpmSubjects(extracted);
+                        var parsed = ExtractionController.ParseSpmSubjects(extracted);
 
                         return new JsonResult(new
                         {
@@ -507,11 +513,15 @@ namespace sam.Controllers
                         applicant.IcNumber,
                         app.AppliedProgram,
                         applicant.Address,
-                        app.ApplicationStatus
+                        app.ApplicationStatus,
+                        applicant.Gender,
+                        app.SpmResult,
+                        app.PreUResult,
+                        app.PreUType
                     }
                 )
                 .OrderBy(a => a.ApplicationStatus == "Approved" ? 0 :
-                              a.ApplicationStatus == "Pending" ? 1 : 2) // Approved -> Pending -> Others
+                              a.ApplicationStatus == "Pending" ? 1 : 2)
                 .ThenBy(a => a.Name)
                 .ToListAsync();
 

@@ -1,23 +1,26 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, TemplateRef, ViewChild } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTable, MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { TemplateRef, ViewChild } from '@angular/core';
-import { tap, catchError, of, forkJoin } from 'rxjs';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { catchError, forkJoin, of, tap } from 'rxjs';
+import * as XLSX from 'xlsx';
 
 export interface Program {
   code: string;
@@ -34,6 +37,7 @@ export interface Program {
     MatSortModule,
     MatFormFieldModule,
     MatSelectModule,
+    MatProgressSpinnerModule,
     MatInputModule,
     FormsModule,
     MatIconModule,
@@ -56,7 +60,7 @@ export class SortApplicantsComponent {
   displayedColumns: string[] = ['name', 'general', 'special', 'status'];
   faculties: any[] = [];
   selectedEmail: string = '';
-  emailMessage: string = 'test123';
+  emailMessage: string = '';
   filteredApplicants: any[] = [];
   searchTerm: string = '';
   applicants: any[] = [];
@@ -67,18 +71,22 @@ export class SortApplicantsComponent {
   selectedLecturer: string | null = null;
   sortedApplications: any = [];
   displayedColumnsReport: string[] = ['id', 'name', 'ic', 'appliedProgram', 'email', 'status'];
+  isSending = false;
 
   lecturers = [
-    { name: 'Dr. Aziz', email: 'aziz@university.edu' },
-    { name: 'Prof. Lim', email: 'lim@university.edu' },
-    { name: 'Dr. Aisha', email: 'aisha@university.edu' }
+    { name: 'Dr. Aziz', email: 'wongjie@graduate.utm.my' },
+    { name: 'Prof. Lim', email: 'wongjie@graduate.utm.my' },
+    { name: 'Dr. Aisha', email: 'wongjie@graduate.utm.my' }
   ];
 
   @ViewChild('requirementDialog') requirementDialog!: TemplateRef<any>;
   @ViewChild('quotaReachedDialog') quotaReachedDialog!: TemplateRef<any>;
   @ViewChild('reportDialog') reportDialog!: TemplateRef<any>;
-  @ViewChild(MatTable) table!: MatTable<any>;
+  @ViewChild('successDialog') successDialog!: TemplateRef<any>;
+  dialogRef!: MatDialogRef<any>;
 
+  @ViewChild(MatTable) table!: MatTable<any>;
+  @ViewChild('pdfTable') pdfTable!: ElementRef;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private dialog: MatDialog, private snackBar: MatSnackBar,
@@ -474,26 +482,92 @@ export class SortApplicantsComponent {
     }
   }
 
-  sendEmail() {
-    if (!this.selectedLecturer) return;
-    if (!this.selectedLecturer || !this.emailMessage) {
-      alert('Please select an email and enter a message.');
+  saveToPDF() {
+    const DATA = document.getElementById('report-content');
+    if (!DATA) {
+      console.error('PDF content not found');
       return;
     }
 
-    const emailData = {
-      to: this.selectedLecturer,
-      subject: 'Automated Email from AIROST',
-      body: this.emailMessage
-    };
+    html2canvas(DATA).then(canvas => {
+      const imgWidth = 208;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const contentDataURL = canvas.toDataURL('image/png');
 
-    this.http.post('https://localhost:5001/api/email/send', emailData)
-      .subscribe(response => {
-        alert('Email sent successfully!');
-      }, error => {
-        alert('Error sending email:' + error);
-      });
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      pdf.addImage(contentDataURL, 'PNG', 0, 10, imgWidth, imgHeight);
+      pdf.save('UG_ApplicationReport.pdf');
+    });
   }
+
+
+
+  sendEmail() {
+    if (!this.selectedLecturer) return;
+    this.isSending = true;
+
+    this.getSortedApplications().subscribe(data => {
+      this.sortedApplications = data;
+      const worksheetData = this.sortedApplications.map((app: {
+        gender: any;
+        preUType: any;
+        preUResult: any;
+        spmResult: any; name: any; icNumber: any; appliedProgram: any; address: any; applicationStatus: any;
+      }, index: number) => ({
+        ID: index + 1,
+        Name: app.name,
+        Gender: app.gender,
+        IC: app.icNumber,
+        Email: app.address,
+        'SPM Result': app.spmResult,
+        'Pre-U Type': app.preUType,
+        'Pre-U Result': app.preUResult,
+        'Applied Program': this.getProgramName(app.appliedProgram),
+        'Program Code': app.appliedProgram,
+        Status: app.applicationStatus,
+
+      }));
+
+      const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(worksheetData);
+      const workbook: XLSX.WorkBook = { Sheets: { 'Applications': worksheet }, SheetNames: ['Applications'] };
+      const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        const base64 = result.split(',')[1]; // Strip "data:..." part
+
+        const payload = {
+          to: this.selectedLecturer,
+          subject: 'Application Report for UG',
+          body: this.emailMessage || 'Please find the attached report.',
+          excelFileBase64: base64
+        };
+
+        this.http.post('https://localhost:7108/api/Mail/email/send', payload, {
+          headers: { 'Content-Type': 'application/json' }
+        }).subscribe({
+          next: () => {
+            this.isSending = false;
+            this.dialog.open(this.successDialog);
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            this.isSending = false;
+            console.error(err);
+            alert('Failed to send email: ' + err.error?.error || err.message);
+            this.cdr.detectChanges();
+          }
+        });
+      };
+
+      reader.readAsDataURL(blob);
+    });
+  }
+
+
 
 
 }

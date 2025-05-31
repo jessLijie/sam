@@ -5,7 +5,7 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using YourNamespace.Models;
 
-[Route("api/email")]
+[Route("api/[controller]")]
 [ApiController]
 public class MailController : ControllerBase
 {
@@ -16,7 +16,7 @@ public class MailController : ControllerBase
         _smtpSettings = smtpSettings.Value;
     }
 
-    [HttpPost("send")]
+    [HttpPost("email/send")]
     public async Task<IActionResult> SendEmail([FromBody] EmailRequest request)
     {
         if (string.IsNullOrEmpty(request.To) || string.IsNullOrEmpty(request.Body))
@@ -40,11 +40,17 @@ public class MailController : ControllerBase
                 Body = request.Body,
                 IsBodyHtml = false
             };
-            if (string.IsNullOrEmpty(request.To))
-            {
-                throw new ArgumentException("Recipient email cannot be null or empty.");
-            }
+
             mailMessage.To.Add(request.To);
+
+            // Add Excel attachment if provided
+            if (!string.IsNullOrEmpty(request.ExcelFileBase64))
+            {
+                byte[] fileBytes = Convert.FromBase64String(request.ExcelFileBase64);
+                var stream = new MemoryStream(fileBytes);
+                var attachment = new Attachment(stream, "ApplicationReport.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                mailMessage.Attachments.Add(attachment);
+            }
 
             await smtpClient.SendMailAsync(mailMessage);
 

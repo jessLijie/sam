@@ -16,7 +16,7 @@ netstat -a -n -o | findstr :3306
 ```
 
 ```bash
-taskkill /PID 6548 /F
+taskkill /PID 7468 /F
 ```
 
 ```bash
@@ -93,6 +93,10 @@ dotnet add package Emgu.CV.runtime.windows
 dotnet add package Emgu.CV.Extensions
 dotnet add package F23.StringSimilarity
 dotnet add package FuzzySharp
+npm install jspdf html2canvas
+npm install xlsx file-saver
+dotnet add package MailKit
+
 ```
 
 
