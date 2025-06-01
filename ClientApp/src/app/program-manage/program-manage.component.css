@@ -41,7 +41,7 @@ input {
   margin-bottom: 25px;
 }
 
-.manage-button{
+.manage-button {
   border: #080a84;
   background-color: #080a84;
   border-radius: .5rem;
@@ -60,7 +60,7 @@ input {
   color: #ffffff;
 }
 
-.quota-button{
+.quota-button {
   border: #840808;
   background-color: #840808;
   border-radius: .5rem;
@@ -116,22 +116,24 @@ input {
   width: 400px;
 }
 
-.modal-content h4{
+.modal-content h4 {
   padding-bottom: 20px;
   margin-bottom: 20px;
   border-bottom: 2px solid #ccc;
 }
 
-.modal-content button{
+.modal-content button {
   margin: 10px;
 }
 
 mat-form-field {
   width: 100%;
-  input{
-    width: 100%;
-  }
 }
+
+mat-form-field input {
+  width: 100%;
+}
+
 .category-tag {
   display: inline-block;
   padding: 6px 12px;
@@ -142,24 +144,30 @@ mat-form-field {
 }
 
 .spm-tag {
-  background-color: #f44336; /* Red */
+  background-color: #f44336;
+  /* Red */
 }
 
 .stpm-tag {
-  background-color: #2196F3; /* Blue */
+  background-color: #2196F3;
+  /* Blue */
 }
 
 .muet-tag {
-  background-color: #4CAF50; /* Green */
+  background-color: #4CAF50;
+  /* Green */
 }
 
 .diploma-tag {
-  background-color: #FF9800; /* Orange */
+  background-color: #FF9800;
+  /* Orange */
 }
 
 .matriculation-tag {
-  background-color: #9C27B0; /* Purple */
+  background-color: #9C27B0;
+  /* Purple */
 }
+
 .modal-overlay-sub {
   position: fixed;
   top: 0;
@@ -176,33 +184,39 @@ mat-form-field {
   background: white;
   width: 80%;
   max-width: 600px;
-  height: 80vh; /* Set a fixed height */
+  height: 80vh;
+  /* Set a fixed height */
   display: flex;
   flex-direction: column;
   border-radius: 8px;
-  overflow: hidden; /* Prevent content from overflowing */
+  overflow: hidden;
+  /* Prevent content from overflowing */
 }
 
-.course-modal{
+.course-modal {
   background: white;
   width: 80%;
   max-width: 600px;
-  height: 80vh; /* Set a fixed height */
+  height: 80vh;
+  /* Set a fixed height */
   display: flex;
   flex-direction: column;
   border-radius: 8px;
-  overflow: hidden; /* Prevent content from overflowing */
+  overflow: hidden;
+  /* Prevent content from overflowing */
 }
 
 .modal-body-sub {
   flex: 1;
-  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-y: auto;
+  /* Enable vertical scrolling */
   padding: 20px;
 }
 
 .table-container-sub {
   width: 100%;
-  overflow-y: auto; /* Make table scrollable */
+  overflow-y: auto;
+  /* Make table scrollable */
   margin-bottom: 20px;
 }
 
@@ -212,15 +226,17 @@ mat-form-field {
   gap: 10px;
 }
 
-.subject-button{
+.subject-button {
   margin-right: 5px;
   margin-bottom: 25px;
   float: right;
 }
 
 .full-width-table {
-  width: 100%; /* Make table expand */
-  table-layout: auto; /* Adjusts column width dynamically */
+  width: 100%;
+  /* Make table expand */
+  table-layout: auto;
+  /* Adjusts column width dynamically */
 }
 
 .modal-overlay-custom {
@@ -237,9 +253,12 @@ mat-form-field {
 }
 
 .course-modal-custom {
-  width: 80%;  /* Adjust the width to make it wider */
-  max-width: 800px;  /* Set a maximum width */
-  height: 80vh;  /* Make the height responsive */
+  width: 80%;
+  /* Adjust the width to make it wider */
+  max-width: 800px;
+  /* Set a maximum width */
+  height: 80vh;
+  /* Make the height responsive */
   background: #fff;
   border-radius: 8px;
   overflow: hidden;
@@ -250,5 +269,6 @@ mat-form-field {
 /* Adjust modal body content */
 .modal-body-custom {
   padding: 20px;
-  overflow-y: auto; /* Allow scrolling for long content */
+  overflow-y: auto;
+  /* Allow scrolling for long content */
 }

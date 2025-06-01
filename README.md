@@ -145,4 +145,6 @@ matriculation_results []
 foudation_results []
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!NONONONONO!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
+http://wongjie-001-site1.qtempurl.com
+https://localhost:7108
+"Server=MYSQL1002.site4now.net;Database=db_ab9c9e_sam;Uid=ab9c9e_sam;Pwd=YOUR_DB_PASSWORD"
