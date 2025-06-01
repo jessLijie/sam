@@ -125,12 +125,12 @@ export class SortApplicantsComponent {
   }
 
   getSortedApplications() {
-    return this.http.get<any[]>(`http://wongjie-001-site1.qtempurl.com/api/Application/sorted-report`);
+    return this.http.get<any[]>(`https://wongjie-001-site1.qtempurl.com/api/Application/sorted-report`);
   }
 
 
   fetchCoursesGrouped() {
-    this.http.get<any[]>('http://wongjie-001-site1.qtempurl.com/api/Course/grouped')
+    this.http.get<any[]>('https://wongjie-001-site1.qtempurl.com/api/Course/grouped')
       .subscribe(data => {
         this.faculties = data;
         this.cdr.detectChanges();
@@ -144,7 +144,7 @@ export class SortApplicantsComponent {
   selectProgram(programCode: string) {
     this.selectedProgramCode = programCode;
 
-    this.http.get<any[]>(`http://wongjie-001-site1.qtempurl.com/api/Application/by-program/${programCode}`)
+    this.http.get<any[]>(`https://wongjie-001-site1.qtempurl.com/api/Application/by-program/${programCode}`)
       .subscribe(data => {
         this.applicants = data.map(app => {
           const spm = JSON.parse(app.spmResult || '{}');
@@ -321,7 +321,7 @@ export class SortApplicantsComponent {
 
     // Send approved status to backend for selected applications
     const updateRequests = toApprove.map(app => {
-      return this.http.post(`http://wongjie-001-site1.qtempurl.com/api/Application/updateStatusBulk/${app.id}`, {
+      return this.http.post(`https://wongjie-001-site1.qtempurl.com/api/Application/updateStatusBulk/${app.id}`, {
         status: 'approved'
       }).pipe(
         tap(() => {
@@ -431,7 +431,7 @@ export class SortApplicantsComponent {
 
 
   fetchEntryRequirements() {
-    this.http.get<any[]>('http://wongjie-001-site1.qtempurl.com/api/EntryRequirement')
+    this.http.get<any[]>('https://wongjie-001-site1.qtempurl.com/api/EntryRequirement')
       .subscribe(data => {
         this.entryRequirements = data;
         this.cdr.detectChanges();
@@ -440,7 +440,7 @@ export class SortApplicantsComponent {
 
 
   fetchCourses(): void {
-    this.http.get<{ [key: string]: Program[] }>('http://wongjie-001-site1.qtempurl.com/api/Course/courses')
+    this.http.get<{ [key: string]: Program[] }>('https://wongjie-001-site1.qtempurl.com/api/Course/courses')
       .subscribe(response => {
         this.programs = response;
         this.cdr.detectChanges();
@@ -546,7 +546,7 @@ export class SortApplicantsComponent {
           excelFileBase64: base64
         };
 
-        this.http.post('http://wongjie-001-site1.qtempurl.com/api/Mail/email/send', payload, {
+        this.http.post('https://wongjie-001-site1.qtempurl.com/api/Mail/email/send', payload, {
           headers: { 'Content-Type': 'application/json' }
         }).subscribe({
           next: () => {
