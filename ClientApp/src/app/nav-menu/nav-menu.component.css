@@ -16,3 +16,23 @@ html {
 .box-shadow {
   box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
 }
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px; /* Space between icon and text */
+  vertical-align: middle;
+}
+
+mat-icon {
+  font-size: 20px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.link-active .nav-link {
+  color: #840808 !important;
+  text-shadow: 0 0 .1px #840808;
+  border-bottom: 2px solid #840808;
+}

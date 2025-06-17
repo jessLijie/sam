@@ -6,23 +6,27 @@
 
 <div class="send-email-container">
   <!-- Lecturer Dropdown -->
-  <mat-form-field appearance="fill" class="lecturer-dropdown">
+  <!-- <mat-form-field appearance="fill" class="lecturer-dropdown">
     <mat-label>Select Lecturer to Send Excel Report</mat-label>
     <mat-select [(value)]="selectedLecturer">
       <mat-option *ngFor="let lecturer of lecturers" [value]="lecturer.email">
         {{ lecturer.name }}
       </mat-option>
     </mat-select>
-  </mat-form-field>
+  </mat-form-field> -->
+  <mat-form-field appearance="fill" class="lecturer-input">
+  <mat-label>Enter Lecturer Email to Send Excel Report</mat-label>
+  <input matInput [(ngModel)]="selectedLecturer" (ngModelChange)="validateEmail()" placeholder="e.g. user@domain.com">
+  <mat-error *ngIf="selectedLecturer && !emailValid">Invalid email format</mat-error>
+</mat-form-field>
 
-  <!-- Send Email Button -->
   <!-- Send Email Button -->
   <button
     mat-fab
     extended
     class="send-button"
     (click)="sendEmail()"
-    [disabled]="!selectedLecturer || isSending"
+  [disabled]="!selectedLecturer || !emailValid || isSending"
   >
     <span
       [ngStyle]="{

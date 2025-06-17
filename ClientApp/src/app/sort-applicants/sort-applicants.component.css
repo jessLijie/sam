@@ -12,6 +12,11 @@
   min-width: 200px; /* prevent being too small */
 }
 
+.lecturer-input{
+  flex: 1; /* optional: let dropdown grow */
+  min-width: 200px; /* prevent being too small */
+}
+
 .send-button {
   margin-right: 0; /* Remove if using gap */
   margin-bottom: 25px;

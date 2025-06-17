@@ -80,7 +80,16 @@
           <ng-container
             *ngIf="editingSpecialRowIndex === rowIndex; else gradeView"
           >
-            <input matInput [(ngModel)]="updatedSpecialGrade" />
+            <input
+              matInput
+              [(ngModel)]="updatedSpecialGrade"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="validateGrade($event)"
+              [class.invalid-grade]="!isValidGrade"
+            />
+            <mat-error *ngIf="!isValidGrade">
+              Invalid grade. Allowed: {{ validGrades.join(", ") }}
+            </mat-error>
           </ng-container>
           <ng-template #gradeView>{{ element.grade }}</ng-template>
         </td>
@@ -93,9 +102,11 @@
             mat-button
             *ngIf="editingSpecialRowIndex === rowIndex; else editButton"
             (click)="saveSpecialChanges(program.code, rowIndex)"
+            [disabled]="!isValidGrade"
           >
             <mat-icon>check</mat-icon>
           </button>
+
           <ng-template #editButton>
             <button
               mat-button
@@ -146,7 +157,16 @@
     <th mat-header-cell *matHeaderCellDef style="width: 30%">Minimum Grade</th>
     <td mat-cell *matCellDef="let element; let generalRowIndex = index">
       <ng-container *ngIf="editingRowIndex === generalRowIndex; else gradeView">
-        <input matInput [(ngModel)]="updatedGrade" />
+        <input
+          matInput
+          [(ngModel)]="updatedGrade"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="validateGrade($event)"
+          [class.invalid-grade]="!isValidGrade"
+        />
+        <mat-error *ngIf="!isValidGrade">
+          Invalid grade. Allowed: {{ validGrades.join(", ") }}
+        </mat-error>
       </ng-container>
       <ng-template #gradeView>{{ element.grade }}</ng-template>
     </td>
@@ -159,6 +179,7 @@
         mat-button
         *ngIf="editingRowIndex === rowIndex; else editButton"
         (click)="saveChanges(rowIndex)"
+        [disabled]="!isValidGrade"
       >
         <mat-icon>check</mat-icon>
       </button>
@@ -387,6 +408,9 @@
         <mat-form-field>
           <mat-label>Subject Name</mat-label>
           <input matInput type="text" formControlName="subjectName" />
+          <mat-error *ngIf="isDuplicateSubject">
+            This subject already exists in the selected category.
+          </mat-error>
         </mat-form-field>
 
         <div class="modal-actions">
@@ -404,7 +428,7 @@
             color="primary"
             type="button"
             (click)="saveSubject()"
-            [disabled]="subjectForm.invalid"
+            [disabled]="subjectForm.invalid || isDuplicateSubject"
             class="subject-button"
           >
             Add

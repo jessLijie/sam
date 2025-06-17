@@ -1,16 +1,64 @@
-<h2>Welcome admin, choose your operations:</h2>
+<div class="dashboard-container">
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <mat-card class="summary-card">
+      <h3>Total Applicants</h3>
+      <p>{{ totalApplicants }}</p>
+    </mat-card>
+    <mat-card class="summary-card">
+      <h3>Approved Applicants</h3>
+      <p>{{ approvedApplicants }}</p>
+    </mat-card>
+    <mat-card class="summary-card">
+      <h6>Top Program</h6>
+      <p>{{ topProgram }}</p>
+    </mat-card>
+  </div>
 
-<button mat-button color="primary" type="button" (click)="goToManage()">
-  <mat-icon >edit</mat-icon>
-  Manage Program
-</button>
-<br>
-<button mat-button color="primary" type="button" (click)="goToView()">
-  <mat-icon >search</mat-icon>
-  View Applicants
-</button>
-<br>
-<button mat-button color="primary" type="button"  (click)="goToSort()">
-  <mat-icon >sort</mat-icon>
-  Sort Applicants
-</button>
+  <!-- Recent Applications Table -->
+  <mat-card class="table-card">
+    <h3>Recent Applications</h3>
+    <table mat-table [dataSource]="recentApplications" class="mat-elevation-z2">
+      <!-- ID Column -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef><strong>ID</strong></th>
+        <td mat-cell *matCellDef="let app; let i = index">
+          {{ i + 1 }}
+        </td>
+      </ng-container>
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef><strong>Name</strong></th>
+        <td mat-cell *matCellDef="let app">{{ app.name }}</td>
+      </ng-container>
+
+      <!-- Program Column -->
+      <ng-container matColumnDef="program">
+        <th mat-header-cell *matHeaderCellDef><strong>Program</strong></th>
+        <td mat-cell *matCellDef="let app">{{ app.program }}</td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="program_name">
+        <th mat-header-cell *matHeaderCellDef><strong>Name</strong></th>
+        <td mat-cell *matCellDef="let app">
+          {{ getProgramName(app.program) }}
+        </td>
+      </ng-container>
+      <!-- <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef><strong>Status</strong></th>
+        <td mat-cell *matCellDef="let app">{{ app.status }}</td>
+      </ng-container> -->
+
+      <!-- Date Column -->
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef><strong>Applied On</strong></th>
+        <td mat-cell *matCellDef="let app">{{ app.date | date : "short" }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </mat-card>
+</div>

@@ -1,17 +1,18 @@
-namespace sam.Models{
-        public class Application
+namespace sam.Models
+{
+    public class Application
     {
         [Key]
-        public int Id { get; set; } 
+        public int Id { get; set; }
 
         [Required]
         public string? Name { get; set; }
 
-        public string? SpmResult { get; set; }  
-        public string? PreUResult { get; set; }    
+        public string? SpmResult { get; set; }
+        public string? PreUResult { get; set; }
 
         [Required]
-        public string? PreUType { get; set; }      
+        public string? PreUType { get; set; }
 
         public string? ApplicationStatus { get; set; }
 
@@ -25,6 +26,9 @@ namespace sam.Models{
 
 
         public ICollection<Applicant>? Applicants { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
 
     }
 }

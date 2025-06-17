@@ -1,33 +1,77 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectorRef, Component } from "@angular/core";
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
 import { Router } from '@angular/router';
 
+export interface Program {
+  code: string;
+  name: string;
+  quota: number;
+}
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css'],
   standalone: true,
   imports: [
     CommonModule,
     MatButtonModule,
     MatIconModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatCardModule,
+    MatTableModule
   ],
 })
 export class HomeComponent {
-  constructor(private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private cdr: ChangeDetectorRef) {
 
-  goToManage() {
-    this.router.navigate(['/program-manage']);
+  }
+  summaryData: any = {};
+  recentApplications: any[] = [];
+  displayedColumns: string[] = ['id', 'name', 'program', 'program_name', 'date'];
+  totalApplicants = 0;
+  approvedApplicants = 0;
+  topProgram = '';
+  programs: { [key: string]: Program[] } = {};
+
+  ngOnInit() {
+    this.fetchCourses();
+
+    this.http.get('https://localhost:7108/api/Application/summary').subscribe((data: any) => {
+      this.summaryData = data;
+      this.totalApplicants = data.totalApplicants;
+      this.approvedApplicants = data.approvedApplicants;
+      this.topProgram = data.topProgram;
+      this.recentApplications = data.recentApplications;
+    });
   }
 
-  goToView() {
-    this.router.navigate(['/view-applicants']);
+   fetchCourses(): void {
+      this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
+        .subscribe(response => {
+          this.programs = response;
+          this.cdr.detectChanges();
+        }, error => {
+          console.error('Error fetching courses:', error);
+        });
+    }
+  getProgramName(code: string): string {
+    for (const faculty in this.programs) {
+      const found = this.programs[faculty].find(program => program.code === code);
+      if (found) {
+        return found.name;
+      }
+    }
+    this.cdr.detectChanges();
+    return code;
   }
 
-  goToSort() {
-    this.router.navigate(['/sort-applicants']);
-  }
+
+
+
 }

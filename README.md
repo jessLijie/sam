@@ -16,7 +16,7 @@ netstat -a -n -o | findstr :3306
 ```
 
 ```bash
-taskkill /PID 7468 /F
+taskkill /PID 7420 /F
 ```
 
 ```bash
@@ -145,7 +145,4 @@ matriculation_results []
 foudation_results []
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!NONONONONO!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-https://wongjie-001-site1.qtempurl.com
-https://localhost:7108
-"Server=MYSQL1002.site4now.net;Database=db_ab9c9e_sam;Uid=ab9c9e_sam;Pwd=YOUR_DB_PASSWORD"
-dotnet publish -c Release -r win-x86 --self-contained true
+

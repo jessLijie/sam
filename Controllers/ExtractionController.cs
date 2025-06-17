@@ -117,7 +117,7 @@ namespace sam.Controllers
             return result;
         }
 
-  public static Dictionary<string, string> ParseStpmSubjects(string extractedText)
+        public static Dictionary<string, string> ParseStpmSubjects(string extractedText)
         {
             var result = new Dictionary<string, string>();
             var lines = extractedText.Replace("\r\n", "\n").Split('\n')
@@ -214,3 +214,4 @@ namespace sam.Controllers
 
     }
 }
+

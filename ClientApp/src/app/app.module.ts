@@ -17,11 +17,11 @@ import { ViewApplicantsComponent } from './view-applicants/view-applicants.compo
 @NgModule({
   declarations: [
     AppComponent,
-    NavMenuComponent,
     CounterComponent,
     FetchDataComponent,
   ],
   imports: [
+    NavMenuComponent,
     BrowserAnimationsModule,
     ReactiveFormsModule,
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
@@ -29,6 +29,7 @@ import { ViewApplicantsComponent } from './view-applicants/view-applicants.compo
     FormsModule,
     RouterModule.forRoot([
       { path: '', component: HomeComponent, pathMatch: 'full' },
+      { path: 'home', component: HomeComponent },
       { path: 'counter', component: CounterComponent },
       { path: 'fetch-data', component: FetchDataComponent },
       { path: 'program-manage',component: ProgramManageComponent},

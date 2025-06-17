@@ -94,7 +94,8 @@ namespace sam.Controllers
                 PreUResult = input.PreUResult,
                 PreUType = input.PreUType,
                 AppliedProgram = input.Program_code,
-                ApplicationStatus = "pending"
+                ApplicationStatus = "pending",
+                CreatedAt = DateTime.UtcNow.AddHours(8)
             };
 
             _context.Applications.Add(application);
@@ -296,7 +297,9 @@ namespace sam.Controllers
 
 
                     // string tessdataPath = Path.Combine(Directory.GetCurrentDirectory(), "tessdata");
-                    using var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default);
+                    // using var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default);
+                    var tessDataPath = Path.Combine(AppContext.BaseDirectory, "tessdata");
+                    using var ocrEngine = new TesseractEngine(tessDataPath, "eng", EngineMode.Default);
 
                     for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
                     {
@@ -360,7 +363,6 @@ namespace sam.Controllers
                 {
                     var pdfDocument = PdfiumViewer.PdfDocument.Load(stream);
 
-
                     bool camScannerDetected = false;
 
                     for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
@@ -391,7 +393,9 @@ namespace sam.Controllers
                         });
                     }
 
-                    using var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default);
+                    // using var ocrEngine = new TesseractEngine(@"./bin/Debug/net8.0/tessdata", "eng", EngineMode.Default);
+                    var tessDataPath = Path.Combine(AppContext.BaseDirectory, "tessdata");
+                    using var ocrEngine = new TesseractEngine(tessDataPath, "eng", EngineMode.Default);
 
                     for (int pageIndex = 0; pageIndex < pdfDocument.PageCount; pageIndex++)
                     {
@@ -528,6 +532,39 @@ namespace sam.Controllers
             return Ok(report);
         }
 
+        [HttpGet("summary")]
+        public async Task<IActionResult> GetDashboardSummary()
+        {
+            var totalApplicants = await _context.Applications.CountAsync();
+            var approvedApplicants = await _context.Applications
+                .CountAsync(a => a.ApplicationStatus == "approved");
+
+            var topProgram = await _context.Applications
+                .GroupBy(a => a.AppliedProgram)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefaultAsync();
+
+            var recentApplications = await _context.Applications
+                .OrderByDescending(a => a.CreatedAt)
+                .Take(5)
+                .Select(a => new
+                {
+                    name = a.Name,
+                    program = a.AppliedProgram,
+                    status = a.ApplicationStatus,
+                    date = a.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                totalApplicants,
+                approvedApplicants,
+                topProgram,
+                recentApplications
+            });
+        }
 
         private bool ApplicationExists(int id)
         {
