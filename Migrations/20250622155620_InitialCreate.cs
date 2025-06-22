@@ -5,7 +5,7 @@
 namespace sam.Migrations
 {
     /// <inheritdoc />
-    public partial class dbInit : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

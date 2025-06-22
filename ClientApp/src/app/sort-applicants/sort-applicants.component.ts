@@ -133,12 +133,12 @@ export class SortApplicantsComponent {
   }
 
   getSortedApplications() {
-    return this.http.get<any[]>(`https://localhost:7108/api/Application/sorted-report`);
+    return this.http.get<any[]>(`https://wongjie-001-site1.qtempurl.com/api/Application/sorted-report`);
   }
 
 
   fetchCoursesGrouped() {
-    this.http.get<any[]>('https://localhost:7108/api/Course/grouped')
+    this.http.get<any[]>('https://wongjie-001-site1.qtempurl.com/api/Course/grouped')
       .subscribe(data => {
         this.faculties = data;
         this.cdr.detectChanges();
@@ -152,7 +152,7 @@ export class SortApplicantsComponent {
   selectProgram(programCode: string) {
     this.selectedProgramCode = programCode;
 
-    this.http.get<any[]>(`https://localhost:7108/api/Application/by-program/${programCode}`)
+    this.http.get<any[]>(`https://wongjie-001-site1.qtempurl.com/api/Application/by-program/${programCode}`)
       .subscribe(data => {
         this.applicants = data.map(app => {
           const spm = JSON.parse(app.spmResult || '{}');
@@ -324,7 +324,7 @@ export class SortApplicantsComponent {
 
     const updateRequests = [
       ...toApprove.map(app =>
-        this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+        this.http.post(`https://wongjie-001-site1.qtempurl.com/api/Application/updateStatusBulk/${app.id}`, {
           status: 'approved'
         }).pipe(
           tap(() => (app.status = 'approved')),
@@ -335,7 +335,7 @@ export class SortApplicantsComponent {
         )
       ),
       ...toQuotaFull.map(app =>
-        this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+        this.http.post(`https://wongjie-001-site1.qtempurl.com/api/Application/updateStatusBulk/${app.id}`, {
           status: 'quota full'
         }).pipe(
           tap(() => (app.status = 'quota full')),
@@ -346,7 +346,7 @@ export class SortApplicantsComponent {
         )
       ),
       ...toNotEligible.map(app =>
-        this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+        this.http.post(`https://wongjie-001-site1.qtempurl.com/api/Application/updateStatusBulk/${app.id}`, {
           status: 'not eligible'
         }).pipe(
           tap(() => (app.status = 'not eligible')),
@@ -459,7 +459,7 @@ export class SortApplicantsComponent {
 
 
   fetchEntryRequirements() {
-    this.http.get<any[]>('https://localhost:7108/api/EntryRequirement')
+    this.http.get<any[]>('https://wongjie-001-site1.qtempurl.com/api/EntryRequirement')
       .subscribe(data => {
         this.entryRequirements = data;
         this.cdr.detectChanges();
@@ -468,7 +468,7 @@ export class SortApplicantsComponent {
 
 
   fetchCourses(): void {
-    this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
+    this.http.get<{ [key: string]: Program[] }>('https://wongjie-001-site1.qtempurl.com/api/Course/courses')
       .subscribe(response => {
         this.programs = response;
         this.cdr.detectChanges();
@@ -574,7 +574,7 @@ export class SortApplicantsComponent {
           excelFileBase64: base64
         };
 
-        this.http.post('https://localhost:7108/api/Mail/email/send', payload, {
+        this.http.post('https://wongjie-001-site1.qtempurl.com/api/Mail/email/send', payload, {
           headers: { 'Content-Type': 'application/json' }
         }).subscribe({
           next: () => {
@@ -607,7 +607,7 @@ export class SortApplicantsComponent {
     const appId = this.editingApp.id;
     const updatedBy = this.authService.getUsername();
 
-    this.http.put(`https://localhost:7108/api/Application/${appId}/remark`, { remark: updatedRemark, updatedBy: updatedBy })
+    this.http.put(`https://wongjie-001-site1.qtempurl.com/api/Application/${appId}/remark`, { remark: updatedRemark, updatedBy: updatedBy })
       .subscribe(() => {
         this.snackBar.open('Remark updated', 'Close', {
           duration: 2000,
@@ -631,7 +631,7 @@ export class SortApplicantsComponent {
   approveSingle(app: any): void {
     if (app.status === 'approved' || this.isQuotaFull()) return;
 
-    this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+    this.http.post(`https://wongjie-001-site1.qtempurl.com/api/Application/updateStatusBulk/${app.id}`, {
       status: 'approved',
       updatedBy: this.authService.getUsername()
 
@@ -647,7 +647,7 @@ export class SortApplicantsComponent {
   }
 
   rejectSingle(app: any): void {
-    this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+    this.http.post(`https://wongjie-001-site1.qtempurl.com/api/Application/updateStatusBulk/${app.id}`, {
       status: 'rejected',
       updatedBy: this.authService.getUsername()
     }).subscribe(() => {

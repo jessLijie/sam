@@ -185,34 +185,6 @@ INSERT INTO `subjects` (`Id`, `Category`, `SubjectName`) VALUES
 
 -- --------------------------------------------------------
 
---
--- Table structure for table `__efmigrationshistory`
---
-
-CREATE TABLE `__efmigrationshistory` (
-  `MigrationId` varchar(150) NOT NULL,
-  `ProductVersion` varchar(32) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `__efmigrationshistory`
---
-
-INSERT INTO `__efmigrationshistory` (`MigrationId`, `ProductVersion`) VALUES
-('20250104162644_programEntryReq', '8.0.8'),
-('20250309182214_AAA', '8.0.8'),
-('20250310055105_updateApplicationModal', '8.0.8'),
-('20250325105536_manageCourse', '8.0.8'),
-('20250325105905_manageSubject', '8.0.8'),
-('20250325141821_editCourse', '8.0.8'),
-('20250408132843_choices', '8.0.8'),
-('20250424155517_quota', '8.0.8'),
-('20250620115013_AddRemark', '8.0.8'),
-('20250622131809_AddStatusAndSubmittedAtToApplication', '8.0.8'),
-('20250622132352_logRecord', '8.0.8'),
-('20250622152053_dbInit', '8.0.8');
-
---
 -- Indexes for dumped tables
 --
 
@@ -247,13 +219,6 @@ ALTER TABLE `entryrequirements`
 ALTER TABLE `subjects`
   ADD PRIMARY KEY (`Id`);
 
---
--- Indexes for table `__efmigrationshistory`
---
-ALTER TABLE `__efmigrationshistory`
-  ADD PRIMARY KEY (`MigrationId`);
-
---
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -297,56 +262,6 @@ ALTER TABLE `subjects`
 ALTER TABLE `applicants`
   ADD CONSTRAINT `FK_Applicants_Applications_ApplicationId` FOREIGN KEY (`ApplicationId`) REFERENCES `applications` (`Id`) ON DELETE CASCADE;
 COMMIT;
-
-INSERT INTO `sam`.`courses` (id, CourseCode, Faculty, FacultyCode, CourseName)
-VALUES
--- Faculty of Computing
-(1, 'UT6481001', 'Faculty of Computing', 'fc', 'Software Engineering'),
-(2, 'UT6481002', 'Faculty of Computing', 'fc', 'Data Engineering'),
-(3, 'UT6481003', 'Faculty of Computing', 'fc', 'Bioinformatics'),
-(4, 'UT6481004', 'Faculty of Computing', 'fc', 'Networking'),
-(5, 'UT6481005', 'Faculty of Computing', 'fc', 'Computer Graphics'),
-
--- Faculty of Mechanical Engineering
-(6, 'UT6521001', 'Faculty of Mechanical Engineering', 'fkm', 'Pure Mechanical Engineering'),
-(7, 'UT6521003', 'Faculty of Mechanical Engineering', 'fkm', 'Manufacturing Engineering'),
-(8, 'UT6521004', 'Faculty of Mechanical Engineering', 'fkm', 'Industrial Engineering'),
-(9, 'UT6525001', 'Faculty of Mechanical Engineering', 'fkm', 'Aerospace Engineering'),
-(10, 'UT6525002', 'Faculty of Mechanical Engineering', 'fkm', 'Automotive Engineering'),
-(11, 'UT6525003', 'Faculty of Mechanical Engineering', 'fkm', 'Offshore Engineering'),
-
--- Faculty of Engineering
-(12, 'UT6522002', 'Faculty of Engineering', 'fke', 'Electrical Engineering'),
-(13, 'UT6523001', 'Faculty of Engineering', 'fke', 'Electronic Engineering'),
-(14, 'UT6523002', 'Faculty of Engineering', 'fke', 'Mechanical Engineering'),
-(15, 'UT6523003', 'Faculty of Engineering', 'fke', 'Biomedical Engineering');
-
-INSERT INTO `sam`.`entryrequirements`
-(`Id`, `Graduate_type`, `Requirement_type`, `Subject`, `Grade`, `Faculty`, `Program_code`)
-VALUES
-(1, 'SPM', 'general', 'Malay', 'C', NULL, NULL),
-(2, 'SPM', 'general', 'English', 'C', NULL, NULL),
-(3, 'STPM', 'general', 'Pengajian Am', 'B', NULL, NULL),
-(4, 'STPM', 'general', 'MUET', '5.0', NULL, NULL),
-(5, 'Matriculation', 'general', 'PNGK', '1.0', NULL, NULL),
-(6, 'Diploma', 'general', 'PNGK', '2.00', NULL, NULL),
-(7, 'Diploma', 'general', 'Malay', '3.65', NULL, NULL),
-(8, 'STPM', 'special', 'Additional Mathematics', 'B-', 'fc', 'UT6481001'),
-(9, 'SPM', 'special', 'Mathematics', 'C', 'fc', 'UT6481001'),
-(10, 'SPM', 'special', 'Additional Mathematics', 'C', 'fc', 'UT6481001'),
-(11, 'STPM', 'special', 'PNGK', '3.67', 'fkm', 'UT6521001'),
-(12, 'STPM', 'special', 'Additional Mathematics', 'B-', 'fkm', 'UT6521001'),
-(13, 'STPM', 'special', 'Physics/Chemistry', 'B-', 'fkm', 'UT6521001');
-
-INSERT INTO `sam`.`subjects`
-(`Category`, `SubjectName`)
-VALUES
-('SPM','Bahasa Melayu'),
-('STPM','Pengajian Am'),
-('Matriculation','Biology'),
-('Diploma','MUET')
-
-    
 
 
 

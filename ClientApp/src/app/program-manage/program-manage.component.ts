@@ -216,7 +216,7 @@ export class ProgramManageComponent implements AfterViewInit {
 
 
   fetchExistingEntryRequirements(): void {
-    this.http.get<any[]>('https://localhost:7108/api/EntryRequirement')
+    this.http.get<any[]>('https://wongjie-001-site1.qtempurl.com/api/EntryRequirement')
       .subscribe(response => {
         this.existingEntryRequirements = response;
       }, error => {
@@ -275,7 +275,7 @@ export class ProgramManageComponent implements AfterViewInit {
 
     const subjectData: Subject = this.subjectForm.value;
 
-    this.http.post('https://localhost:7108/api/Course/add', subjectData)
+    this.http.post('https://wongjie-001-site1.qtempurl.com/api/Course/add', subjectData)
       .subscribe(() => {
         this.snackBar.open('Subject added successfully!', 'Close', {
           duration: 2000,
@@ -290,7 +290,7 @@ export class ProgramManageComponent implements AfterViewInit {
   deleteSubject(subjectId: number): void {
     if (!window.confirm('Are you sure you want to delete this subject?')) return;
 
-    this.http.delete(`https://localhost:7108/api/Course/delete/${subjectId}`)
+    this.http.delete(`https://wongjie-001-site1.qtempurl.com/api/Course/delete/${subjectId}`)
       .subscribe(() => {
         this.snackBar.open('Subject deleted successfully!', 'Close', {
           duration: 2000,
@@ -302,7 +302,7 @@ export class ProgramManageComponent implements AfterViewInit {
   }
 
   fetchCategories(): void {
-    this.http.get<string[]>('https://localhost:7108/api/Course/categories')
+    this.http.get<string[]>('https://wongjie-001-site1.qtempurl.com/api/Course/categories')
       .subscribe(response => {
         this.categories = response;
       }, error => {
@@ -321,7 +321,7 @@ export class ProgramManageComponent implements AfterViewInit {
   }
 
   fetchAllSubjects(): void {
-    this.http.get<Subject[]>('https://localhost:7108/api/Course/subjects')
+    this.http.get<Subject[]>('https://wongjie-001-site1.qtempurl.com/api/Course/subjects')
       .subscribe(response => {
         this.subjects = response;
         this.subjectDataSource = new MatTableDataSource(response);
@@ -339,7 +339,7 @@ export class ProgramManageComponent implements AfterViewInit {
   }
 
   fetchSubjects(category: string): void {
-    this.http.get<Subject[]>(`https://localhost:7108/api/Course/subjects/${category}`)
+    this.http.get<Subject[]>(`https://wongjie-001-site1.qtempurl.com/api/Course/subjects/${category}`)
       .subscribe(response => {
         this.subjects = response;
       }, error => {
@@ -374,7 +374,7 @@ export class ProgramManageComponent implements AfterViewInit {
   }
 
   fetchCourses(): void {
-    this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
+    this.http.get<{ [key: string]: Program[] }>('https://wongjie-001-site1.qtempurl.com/api/Course/courses')
       .subscribe(response => {
         this.programs = response;
       }, error => {
@@ -390,7 +390,7 @@ export class ProgramManageComponent implements AfterViewInit {
       fabu: 'Faculty of Built Environment and Surveying',
     };
 
-    this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
+    this.http.get<{ [key: string]: Program[] }>('https://wongjie-001-site1.qtempurl.com/api/Course/courses')
       .subscribe(response => {
         const allPrograms = [];
 
@@ -431,7 +431,7 @@ export class ProgramManageComponent implements AfterViewInit {
       return;
     }
 
-    this.http.put('https://localhost:7108/api/Course/updateQuotas', this.updatedProgramsQuota)
+    this.http.put('https://wongjie-001-site1.qtempurl.com/api/Course/updateQuotas', this.updatedProgramsQuota)
       .subscribe(response => {
         console.log('Quota updated successfully:', response);
         this.closeCourseModal();
@@ -447,7 +447,7 @@ export class ProgramManageComponent implements AfterViewInit {
 
 
   fetchFaculties(): void {
-    this.http.get<Faculty[]>('https://localhost:7108/api/Course/faculties')
+    this.http.get<Faculty[]>('https://wongjie-001-site1.qtempurl.com/api/Course/faculties')
       .subscribe(response => {
         this.faculties = response;
       }, error => {
@@ -456,7 +456,7 @@ export class ProgramManageComponent implements AfterViewInit {
   }
 
   getGeneralRequirement() {
-    this.http.get('https://localhost:7108/api/EntryRequirement/general')
+    this.http.get('https://wongjie-001-site1.qtempurl.com/api/EntryRequirement/general')
       .subscribe((res: any) => {
         this.generalRequirement = new MatTableDataSource(res);
         if (this.generalSort) {
@@ -478,7 +478,7 @@ export class ProgramManageComponent implements AfterViewInit {
   }
 
   getSpecialRequirements(programCode: string) {
-    this.http.get<SpecialEntryRequirement[]>(`https://localhost:7108/api/EntryRequirement/special/${programCode}`)
+    this.http.get<SpecialEntryRequirement[]>(`https://wongjie-001-site1.qtempurl.com/api/EntryRequirement/special/${programCode}`)
       .subscribe((data) => {
         this.specialRequirements[programCode] = data;
         this.cdr.detectChanges();
@@ -500,7 +500,7 @@ export class ProgramManageComponent implements AfterViewInit {
       graduate_type: row.graduate_type,
     };
 
-    this.http.put(`https://localhost:7108/api/EntryRequirement/update/${row.id}`, updatedRequirement).subscribe(
+    this.http.put(`https://wongjie-001-site1.qtempurl.com/api/EntryRequirement/update/${row.id}`, updatedRequirement).subscribe(
       (res) => {
         console.log('Update successful:', res);
         this.snackBar.open('Grade edited successfully!', 'Close', {
@@ -532,7 +532,7 @@ export class ProgramManageComponent implements AfterViewInit {
       grade: this.updatedSpecialGrade,
     };
 
-    this.http.put(`https://localhost:7108/api/EntryRequirement/update/${specialRequirement.id}`, updatedRequirement).subscribe(
+    this.http.put(`https://wongjie-001-site1.qtempurl.com/api/EntryRequirement/update/${specialRequirement.id}`, updatedRequirement).subscribe(
       (res) => {
         console.log('Special Requirement Update Successful:', res);
         this.snackBar.open('Grade edited successfully!', 'Close', {
@@ -561,7 +561,7 @@ export class ProgramManageComponent implements AfterViewInit {
   }
 
   deleteEntryRequirement(id: number, programCode?: string) {
-    this.http.delete(`https://localhost:7108/api/EntryRequirement/delete/${id}`, { responseType: 'text' })
+    this.http.delete(`https://wongjie-001-site1.qtempurl.com/api/EntryRequirement/delete/${id}`, { responseType: 'text' })
       .subscribe(
         (response) => {
           console.log('Delete successful:', response);
@@ -605,7 +605,7 @@ export class ProgramManageComponent implements AfterViewInit {
 
     const formData = this.createForm.value;
 
-    this.http.post('https://localhost:7108/api/EntryRequirement/create', formData)
+    this.http.post('https://wongjie-001-site1.qtempurl.com/api/EntryRequirement/create', formData)
       .subscribe(
         (response) => {
           console.log('Form submitted successfully!', response);

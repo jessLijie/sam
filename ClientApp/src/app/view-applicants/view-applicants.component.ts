@@ -66,7 +66,7 @@ export class ViewApplicantsComponent implements OnInit {
   public isModalOpen = false;
   public modalTitle = '';
   public modalContent: any = null;
-  private apiUrl = 'https://localhost:7108/api/Application';
+  private apiUrl = 'https://wongjie-001-site1.qtempurl.com/api/Application';
   // For the add modal:
   public isAddModalOpen = false;
   public isScanModalOpen = false;
@@ -273,7 +273,7 @@ export class ViewApplicantsComponent implements OnInit {
 
 
   fetchApplicantCounts(): void {
-    this.http.get<any[]>('https://localhost:7108/api/Application')
+    this.http.get<any[]>('https://wongjie-001-site1.qtempurl.com/api/Application')
       .subscribe(applicants => {
         console.log('Fetched applicants:', applicants);
         // Reset counts
@@ -314,7 +314,7 @@ export class ViewApplicantsComponent implements OnInit {
   }
 
   fetchFaculties(): void {
-    this.http.get<Faculty[]>('https://localhost:7108/api/Course/faculties')
+    this.http.get<Faculty[]>('https://wongjie-001-site1.qtempurl.com/api/Course/faculties')
       .subscribe(response => {
         this.faculties = response;
       }, error => {
@@ -324,7 +324,7 @@ export class ViewApplicantsComponent implements OnInit {
 
   fetchCourses(): void {
     this.http
-      .get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
+      .get<{ [key: string]: Program[] }>('https://wongjie-001-site1.qtempurl.com/api/Course/courses')
       .subscribe({
         next: res => {
           this.programs = res;
