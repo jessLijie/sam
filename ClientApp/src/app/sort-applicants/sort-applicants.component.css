@@ -122,3 +122,21 @@
 .badge-default {
   background-color: #9e9e9e; /* grey */
 }
+.remark-cell {
+  max-width: 200px; /* total width for both text and button */
+  padding-right: 0; /* adjust if needed */
+}
+
+.remark-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.remark-text {
+  display: inline-block;
+  max-width: 130px; /* space left for the button */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

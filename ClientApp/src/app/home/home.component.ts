@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { Router } from '@angular/router';
+import { AuthService } from '../../auth/service';
 
 export interface Program {
   code: string;
@@ -28,7 +29,7 @@ export interface Program {
   ],
 })
 export class HomeComponent {
-  constructor(private http: HttpClient, private router: Router, private cdr: ChangeDetectorRef) {
+  constructor(private http: HttpClient, private router: Router, private cdr: ChangeDetectorRef, public authService: AuthService) {
 
   }
   summaryData: any = {};
@@ -51,15 +52,15 @@ export class HomeComponent {
     });
   }
 
-   fetchCourses(): void {
-      this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
-        .subscribe(response => {
-          this.programs = response;
-          this.cdr.detectChanges();
-        }, error => {
-          console.error('Error fetching courses:', error);
-        });
-    }
+  fetchCourses(): void {
+    this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
+      .subscribe(response => {
+        this.programs = response;
+        this.cdr.detectChanges();
+      }, error => {
+        console.error('Error fetching courses:', error);
+      });
+  }
   getProgramName(code: string): string {
     for (const faculty in this.programs) {
       const found = this.programs[faculty].find(program => program.code === code);

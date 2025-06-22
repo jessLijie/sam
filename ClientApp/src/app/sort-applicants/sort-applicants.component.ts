@@ -20,6 +20,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { catchError, forkJoin, of, tap } from 'rxjs';
+import { AuthService } from 'src/auth/service';
 import * as XLSX from 'xlsx';
 
 export interface Program {
@@ -57,7 +58,7 @@ export interface Program {
 })
 
 export class SortApplicantsComponent {
-  displayedColumns: string[] = ['name', 'general', 'special', 'status'];
+  displayedColumns: string[] = ['name', 'general', 'special', 'status', 'remark', 'action'];
   faculties: any[] = [];
   selectedEmail: string = '';
   emailMessage: string = '';
@@ -93,8 +94,12 @@ export class SortApplicantsComponent {
   @ViewChild(MatTable) table!: MatTable<any>;
   @ViewChild('pdfTable') pdfTable!: ElementRef;
   @ViewChild(MatSort) sort!: MatSort;
+  editingApp: any;
+  editingRemark: string = '';
+  @ViewChild('remarkModal') remarkModal!: TemplateRef<any>;
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private dialog: MatDialog, private snackBar: MatSnackBar,
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private dialog: MatDialog, private snackBar: MatSnackBar, private authService: AuthService,
+
   ) { }
   ngOnInit(): void {
     this.fetchCoursesGrouped();
@@ -114,13 +119,11 @@ export class SortApplicantsComponent {
   }
   viewSortedReport() {
     this.getSortedApplications().subscribe(data => {
-      console.log('API data:', data);
+      //console.log('API data:', data);
       this.sortedApplications = data;
       this.dialog.open(this.reportDialog);
     });
   }
-
-
 
   openReportDialog() {
     this.dialog.open(this.reportDialog, {
@@ -155,8 +158,8 @@ export class SortApplicantsComponent {
           const spm = JSON.parse(app.spmResult || '{}');
           const preu = JSON.parse(app.preUResult || '{}');
           const preUType = app.preUType;
-          console.log("SPM Result: ", spm);
-          console.log(preUType, " Result: ", preu);
+          //console.log("SPM Result: ", spm);
+          //console.log(preUType, " Result: ", preu);
           // console.log("Entry Requirement: ",this.entryRequirements);
 
           let generalReqs: any[] = [];
@@ -171,7 +174,7 @@ export class SortApplicantsComponent {
               }
             }
           }
-          console.log("Matched general req", generalReqs);
+          //console.log("Matched general req", generalReqs);
 
           let specialReqs: any[] = [];
 
@@ -185,14 +188,14 @@ export class SortApplicantsComponent {
               }
             }
           }
-          console.log("Matched special req", specialReqs);
+          //console.log("Matched special req", specialReqs);
 
           const generalMatch = generalReqs.filter(r => this.meetsRequirement(r, spm, preu))
           const generalMet = generalMatch.length;
           const specialMatch = specialReqs.filter(r => this.meetsRequirement(r, spm, preu))
           const specialMet = specialMatch.length;
-          console.log("General Met: ", generalMatch);
-          console.log("Special Met: ", specialMatch);
+          //console.log("General Met: ", generalMatch);
+          //console.log("Special Met: ", specialMatch);
 
           const generalUnmet = generalReqs.filter(r => !generalMatch.includes(r));
           const specialUnmet = specialReqs.filter(r => !specialMatch.includes(r));
@@ -295,66 +298,86 @@ export class SortApplicantsComponent {
     const quota = this.getQuota(this.selectedProgramCode);
     let approvedCount = this.applicants.filter(a => a.status === 'approved').length;
 
-    const eligibleApplicants = this.applicants.filter(app =>
-      app.generalMet === app.generalTotal &&
-      app.specialMet === app.specialTotal &&
-      app.applicationStatus !== 'approved' &&
-      app.status !== 'approved'
-    );
+    const toApprove: any[] = [];
+    const toQuotaFull: any[] = [];
+    const toNotEligible: any[] = [];
 
-    const toApprove = [];
+    for (const app of this.applicants) {
+      const alreadyApproved = app.applicationStatus === 'approved';
+      const isRejected = app.applicationStatus === 'rejected';
 
-    for (const app of eligibleApplicants) {
-      if (approvedCount < quota) {
-        toApprove.push(app);
-        approvedCount++;
+      if (alreadyApproved || isRejected) continue;
+
+      const meetsRequirement = app.generalMet === app.generalTotal && app.specialMet === app.specialTotal;
+
+      if (meetsRequirement) {
+        if (approvedCount < quota) {
+          toApprove.push(app);
+          approvedCount++;
+        } else {
+          toQuotaFull.push(app);
+        }
       } else {
-        break;
+        toNotEligible.push(app);
       }
     }
+
+    const updateRequests = [
+      ...toApprove.map(app =>
+        this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+          status: 'approved'
+        }).pipe(
+          tap(() => (app.status = 'approved')),
+          catchError(err => {
+            console.error("Error approving", app.name, err);
+            return of(null);
+          })
+        )
+      ),
+      ...toQuotaFull.map(app =>
+        this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+          status: 'quota full'
+        }).pipe(
+          tap(() => (app.status = 'quota full')),
+          catchError(err => {
+            console.error("Error setting quota full", app.name, err);
+            return of(null);
+          })
+        )
+      ),
+      ...toNotEligible.map(app =>
+        this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+          status: 'not eligible'
+        }).pipe(
+          tap(() => (app.status = 'not eligible')),
+          catchError(err => {
+            console.error("Error setting not eligible", app.name, err);
+            return of(null);
+          })
+        )
+      )
+    ];
 
     if (toApprove.length === 0) {
-      // alert("No applicants eligible or quota already filled.");
-      if (toApprove.length === 0) {
-        this.dialog.open(this.quotaReachedDialog, {
-          data: { message: 'No eligible applicant(s) found.' }
-        });
-        return;
-      }
-      return;
+      this.dialog.open(this.quotaReachedDialog, {
+        data: { message: 'No eligible applicant(s) found.' }
+      });
     }
 
-    // Send approved status to backend for selected applications
-    const updateRequests = toApprove.map(app => {
-      return this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
-        status: 'approved'
-      }).pipe(
-        tap(() => {
-          app.status = 'approved'; // only update locally if backend confirms
-          console.log("Approval(s) success!");
-          this.snackBar.open(`Approval(s) success!`, 'Close', {
-            duration: 2000,
-            horizontalPosition: 'right',
-            verticalPosition: 'top',
-          });
-          this.cdr.detectChanges();
-          this.table.renderRows();
-          this.selectProgram(this.selectedProgramCode);
-
-        }),
-        catchError(err => {
-          console.error("Error approving applicant", app.name, err);
-          return of(null);
-        })
-      );
-    });
-
-    // Wait for all HTTP requests to complete
     forkJoin(updateRequests).subscribe(() => {
+      this.snackBar.open(`Sorting is completed!`, 'Close', {
+        duration: 2000,
+        horizontalPosition: 'right',
+        verticalPosition: 'top',
+      });
+
       this.filteredApplicants = [...this.applicants];
       this.cdr.detectChanges();
+      this.table.renderRows();
+      this.selectProgram(this.selectedProgramCode);
     });
   }
+
 
   getApprovedCount(programCode: string): number {
     return this.applicants.filter(
@@ -406,19 +429,19 @@ export class SortApplicantsComponent {
 
     if (req.graduate_type === 'SPM') {
       studentGrade = spm[subject];
-      console.log("SPM Grade: ", studentGrade, "(", subject, ")");
+      //console.log("SPM Grade: ", studentGrade, "(", subject, ")");
     } else {
       studentGrade = preu[subject];
-      console.log("PreU Grade: ", studentGrade, "(", subject, ")");
+      //console.log("PreU Grade: ", studentGrade, "(", subject, ")");
     }
 
 
     if (!studentGrade) return false;
 
     const studentRank = gradeRank[studentGrade.trim()] ?? 999;
-    console.log("Student Rank: ", studentRank);
+    //console.log("Student Rank: ", studentRank);
     const requiredRank = gradeRank[requiredGrade.trim()] ?? 999;
-    console.log("Required Rank: ", requiredRank);
+    //console.log("Required Rank: ", requiredRank);
 
     return studentRank <= requiredRank;
   }
@@ -571,6 +594,75 @@ export class SortApplicantsComponent {
       reader.readAsDataURL(blob);
     });
   }
+
+
+  openRemarkModal(app: any): void {
+    this.editingApp = app;
+    this.editingRemark = app.remark || '';
+    this.dialogRef = this.dialog.open(this.remarkModal);
+  }
+
+  saveRemark(): void {
+    const updatedRemark = this.editingRemark.trim();
+    const appId = this.editingApp.id;
+    const updatedBy = this.authService.getUsername();
+
+    this.http.put(`https://localhost:7108/api/Application/${appId}/remark`, { remark: updatedRemark, updatedBy: updatedBy })
+      .subscribe(() => {
+        this.snackBar.open('Remark updated', 'Close', {
+          duration: 2000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+        });
+        this.editingApp.remark = updatedRemark;
+        this.selectProgram(this.selectedProgramCode);
+        this.dialogRef.close();
+        this.cdr.detectChanges();
+      }, error => {
+        console.error('Failed to update remark', error);
+        this.snackBar.open('Failed to update remark', 'Close', {
+          duration: 2000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+        });
+      });
+  }
+
+  approveSingle(app: any): void {
+    if (app.status === 'approved' || this.isQuotaFull()) return;
+
+    this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+      status: 'approved',
+      updatedBy: this.authService.getUsername()
+
+    }).subscribe(() => {
+      app.status = 'approved';
+      this.selectProgram(this.selectedProgramCode);
+      this.snackBar.open(`${app.name} approved`, 'Close', {
+        duration: 2000,
+        horizontalPosition: 'right',
+        verticalPosition: 'top',
+      });
+    });
+  }
+
+  rejectSingle(app: any): void {
+    this.http.post(`https://localhost:7108/api/Application/updateStatusBulk/${app.id}`, {
+      status: 'rejected',
+      updatedBy: this.authService.getUsername()
+    }).subscribe(() => {
+      app.status = 'rejected';
+      this.selectProgram(this.selectedProgramCode);
+      this.snackBar.open(`${app.name} rejected`, 'Close', {
+        duration: 2000,
+        horizontalPosition: 'right',
+        verticalPosition: 'top',
+      });
+    });
+  }
+
+
+
 
 
 

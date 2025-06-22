@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,6 +14,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+
 export interface Applicants {
   id: number;
   name: string;
@@ -52,7 +54,8 @@ type CoursesData = { [facultyCode: string]: Program[] };
     MatSnackBarModule,
     ReactiveFormsModule,
     MatChipsModule,
-    MatBadgeModule
+    MatBadgeModule,
+    MatDialogModule
 
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -87,6 +90,7 @@ export class ViewApplicantsComponent implements OnInit {
   filteredProgramNames: string[] = [];
   programDropdownDisabled = true;
   coursesData: CoursesData = {};
+  @ViewChild('extractionGuide') extractionGuide!: TemplateRef<any>;
 
   // Subject option lists
   spmSubjectOptions = [
@@ -157,6 +161,7 @@ export class ViewApplicantsComponent implements OnInit {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {
     this.addForm = this.fb.group({
       name: ['', Validators.required],
@@ -705,6 +710,20 @@ export class ViewApplicantsComponent implements OnInit {
       error: (err) => console.error('Error updating record:', err)
     });
   }
+
+
+
+
+  onInfoIconClick(event: MouseEvent): void {
+    event.stopPropagation();
+
+    setTimeout(() => {
+      this.dialog.open(this.extractionGuide, {
+        width: '400px'
+      });
+    }, 0);
+  }
+
 
 }
 

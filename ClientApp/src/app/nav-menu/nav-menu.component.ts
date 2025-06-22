@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
+import { AuthService } from 'src/auth/service';
 
 @Component({
   selector: 'app-nav-menu',
@@ -20,7 +21,7 @@ import { RouterModule } from '@angular/router';
 export class NavMenuComponent {
   isExpanded = false;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router,public authService: AuthService) { }
   collapse() {
     this.isExpanded = false;
   }
@@ -39,5 +40,10 @@ export class NavMenuComponent {
 
   goToSort() {
     this.router.navigate(['/sort-applicants']);
+  }
+
+   logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

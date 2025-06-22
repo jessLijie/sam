@@ -15,10 +15,17 @@
     </mat-select>
   </mat-form-field> -->
   <mat-form-field appearance="fill" class="lecturer-input">
-  <mat-label>Enter Lecturer Email to Send Excel Report</mat-label>
-  <input matInput [(ngModel)]="selectedLecturer" (ngModelChange)="validateEmail()" placeholder="e.g. user@domain.com">
-  <mat-error *ngIf="selectedLecturer && !emailValid">Invalid email format</mat-error>
-</mat-form-field>
+    <mat-label>Enter Lecturer Email to Send Excel Report</mat-label>
+    <input
+      matInput
+      [(ngModel)]="selectedLecturer"
+      (ngModelChange)="validateEmail()"
+      placeholder="e.g. user@domain.com"
+    />
+    <mat-error *ngIf="selectedLecturer && !emailValid"
+      >Invalid email format</mat-error
+    >
+  </mat-form-field>
 
   <!-- Send Email Button -->
   <button
@@ -26,7 +33,7 @@
     extended
     class="send-button"
     (click)="sendEmail()"
-  [disabled]="!selectedLecturer || !emailValid || isSending"
+    [disabled]="!selectedLecturer || !emailValid || isSending"
   >
     <span
       [ngStyle]="{
@@ -169,6 +176,57 @@
         </td>
       </ng-container>
 
+      <!-- Remark -->
+      <ng-container matColumnDef="remark">
+        <th mat-header-cell *matHeaderCellDef><strong>Remark</strong></th>
+        <td mat-cell *matCellDef="let app" class="remark-cell">
+          <span class="remark-text">
+            <span *ngIf="app.remark; else noRemark">{{ app.remark }}</span>
+            <ng-template #noRemark>
+              <i style="color: grey">N/A</i>
+            </ng-template>
+          </span>
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="openRemarkModal(app)"
+            aria-label="Edit Remark"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <!--Action-->
+      <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef><strong>Action</strong></th>
+        <td mat-cell *matCellDef="let app">
+          <!-- Approve Button: Only if not already approved and quota not full -->
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="approveSingle(app)"
+            aria-label="Approve"
+            [disabled]="app.applicationStatus === 'approved' || isQuotaFull()"
+            matTooltip="Approve {{ app.name }}"
+          >
+            <mat-icon>playlist_add_check</mat-icon>
+          </button>
+
+          <!-- Reject Button: Always enabled -->
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="rejectSingle(app)"
+            aria-label="Reject"
+            [disabled]="app.applicationStatus === 'rejected'"
+            matTooltip="Reject {{ app.name }}"
+          >
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
       <!-- Table Headers and Rows -->
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
@@ -274,7 +332,8 @@
           <th mat-header-cell *matHeaderCellDef>
             <strong>Applied Program</strong>
           </th>
-          <td mat-cell *matCellDef="let app">{{ getProgramName(app.appliedProgram) }}
+          <td mat-cell *matCellDef="let app">
+            {{ getProgramName(app.appliedProgram) }}
             <!-- ({{ app.appliedProgram }}) -->
           </td>
         </ng-container>
@@ -305,8 +364,41 @@
   <h2 mat-dialog-title>Email Sent</h2>
   <mat-dialog-content>
     <p>The email was sent successfully!</p>
+    <p>Please make sure email entered was correct.</p>
   </mat-dialog-content>
   <mat-dialog-actions align="end">
     <button mat-button mat-dialog-close>OK</button>
+  </mat-dialog-actions>
+</ng-template>
+
+<ng-template #remarkModal>
+  <h2 mat-dialog-title>Edit Remark</h2>
+  <mat-dialog-content>
+    <mat-form-field appearance="fill" style="width: 100%">
+      <mat-label>Remark</mat-label>
+      <textarea matInput rows="5" [(ngModel)]="editingRemark"></textarea>
+    </mat-form-field>
+
+    <!-- Display who and when updated -->
+    <div
+      *ngIf="editingApp.remarkUpdatedBy && editingApp.remarkUpdatedAt"
+      style="font-size: 13px; color: gray; margin-top: 8px"
+    >
+      Remark last updated by <strong>{{ editingApp.remarkUpdatedBy }}</strong> on
+      <strong>{{ editingApp.remarkUpdatedAt | date : "short" }}</strong>
+    </div>
+
+    <div
+      *ngIf="editingApp.operationUpdatedBy && editingApp.operationUpdatedAt"
+      style="font-size: 13px; color: gray; margin-top: 8px"
+    >
+      {{editingApp.applicationStatus | titlecase}} by <strong>{{ editingApp.operationUpdatedBy }}</strong> on
+      <strong>{{ editingApp.operationUpdatedAt | date : "short" }}</strong>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="dialogRef.close()">Cancel</button>
+    <button mat-button color="primary" (click)="saveRemark()">Save</button>
   </mat-dialog-actions>
 </ng-template>

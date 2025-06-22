@@ -148,7 +148,7 @@ namespace sam.Controllers
 
             // return Ok(results);
 
-            // extract everything 
+            // extract everything
             // var extractedText = new StringBuilder();
 
             // using (var stream = file.OpenReadStream())
@@ -497,6 +497,8 @@ namespace sam.Controllers
                 return NotFound();
 
             application.ApplicationStatus = dto.Status;
+            application.OperationUpdatedAt = DateTime.UtcNow.AddHours(8);
+            application.OperationUpdatedBy = dto.UpdatedBy;
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -521,7 +523,8 @@ namespace sam.Controllers
                         applicant.Gender,
                         app.SpmResult,
                         app.PreUResult,
-                        app.PreUType
+                        app.PreUType,
+                        app.Remark
                     }
                 )
                 .OrderBy(a => a.ApplicationStatus == "Approved" ? 0 :
@@ -569,6 +572,27 @@ namespace sam.Controllers
         private bool ApplicationExists(int id)
         {
             return _context.Applications.Any(e => e.Id == id);
+        }
+
+        [HttpPut("{id}/remark")]
+        public async Task<IActionResult> UpdateRemark(int id, [FromBody] RemarkUpdateDto dto)
+        {
+
+            var application = await _context.Applications.FindAsync(id);
+
+            if (application == null)
+            {
+                return NotFound($"Application with ID {id} not found.");
+            }
+
+            application.Remark = dto.Remark;
+            application.RemarkUpdatedAt = DateTime.UtcNow.AddHours(8);
+            application.RemarkUpdatedBy = dto.UpdatedBy;
+
+            _context.Applications.Update(application);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Remark updated successfully." });
         }
     }
 }

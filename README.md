@@ -16,7 +16,7 @@ netstat -a -n -o | findstr :3306
 ```
 
 ```bash
-taskkill /PID 7420 /F
+taskkill /PID 6276 /F
 ```
 
 ```bash
@@ -96,6 +96,7 @@ dotnet add package FuzzySharp
 npm install jspdf html2canvas
 npm install xlsx file-saver
 dotnet add package MailKit
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
 
 ```
 

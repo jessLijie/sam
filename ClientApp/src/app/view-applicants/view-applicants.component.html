@@ -86,8 +86,7 @@
   </div>
 </div>
 
-<table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort
->
+<table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort>
   <ng-container matColumnDef="id">
     <th mat-header-cell *matHeaderCellDef>No.</th>
     <!-- <td mat-cell *matCellDef="let applicant">{{ applicant.id }}</td> -->
@@ -156,7 +155,10 @@
   <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 </table>
 
-<div *ngIf="dataSource?.filteredData?.length === 0" style="text-align: center; padding: 1em;">
+<div
+  *ngIf="dataSource?.filteredData?.length === 0"
+  style="text-align: center; padding: 1em"
+>
   <i>**No applicants found under this category(s)</i>
 </div>
 
@@ -442,7 +444,8 @@
           type="button"
           (click)="addPreUResult()"
         >
-            <mat-icon>add</mat-icon>Add {{ addForm.get("preUType")?.value || "Pre-U" }} Result
+          <mat-icon>add</mat-icon>Add
+          {{ addForm.get("preUType")?.value || "Pre-U" }} Result
         </button>
       </div>
 
@@ -562,7 +565,18 @@
       <br />
 
       <!-- SPM Results Section (Required) -->
-      <h3>SPM Results</h3>
+      <h3>
+        SPM Results
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Read extraction guide"
+          (click)="onInfoIconClick($event)"
+          aria-label="Extraction Info"
+        >
+          <mat-icon>info</mat-icon>
+        </button>
+      </h3>
 
       <!-- Hidden file input -->
       <input
@@ -629,7 +643,16 @@
       <br /><br />
 
       <!-- Pre-U Results Section (Choose One) -->
-      <h3>Pre-U Results</h3>
+      <h3>Pre-U Results <button
+          mat-icon-button
+          type="button"
+          matTooltip="Read extraction guide"
+          (click)="onInfoIconClick($event)"
+          aria-label="Extraction Info"
+        >
+          <mat-icon>info</mat-icon>
+        </button></h3>
+
       <input
         type="file"
         #stpmFileInput
@@ -727,3 +750,24 @@
     </form>
   </div>
 </div>
+
+<ng-template #extractionGuide>
+  <h2 mat-dialog-title>PDF Scanning Guide</h2>
+  <mat-dialog-content>
+    <p>
+      <strong> <mat-icon style="color: red">warning</mat-icon> Note:</strong>
+      The extraction result may not be 100% accurate due to differences in
+      document quality and layout. <br />We recommend double-checking the
+      extracted results before submission.
+    </p>
+    <p>Sample document that increases accuracy:</p>
+    <img
+      src="assets/spm.png"
+      alt="Sample SPM PDF"
+      style="width: 100%; border: 1px solid #ccc"
+    />
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Close</button>
+  </mat-dialog-actions>
+</ng-template>

@@ -61,11 +61,17 @@ namespace sam.Migrations
                     b.Property<string>("AppliedProgram")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("FirstChoice")
-                        .HasColumnType("longtext");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("OperationUpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("OperationUpdatedBy")
                         .HasColumnType("longtext");
 
                     b.Property<string>("PreUResult")
@@ -75,13 +81,16 @@ namespace sam.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("SecondChoice")
+                    b.Property<string>("Remark")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("RemarkUpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("RemarkUpdatedBy")
                         .HasColumnType("longtext");
 
                     b.Property<string>("SpmResult")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("ThirdChoice")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");

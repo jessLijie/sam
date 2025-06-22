@@ -13,6 +13,7 @@ import { NavMenuComponent } from './nav-menu/nav-menu.component';
 import { ProgramManageComponent } from './program-manage/program-manage.component';
 import { SortApplicantsComponent } from './sort-applicants/sort-applicants.component';
 import { ViewApplicantsComponent } from './view-applicants/view-applicants.component';
+import { LoginComponent } from './login/login.component';
 
 @NgModule({
   declarations: [
@@ -27,14 +28,16 @@ import { ViewApplicantsComponent } from './view-applicants/view-applicants.compo
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
     HttpClientModule,
     FormsModule,
+    LoginComponent,
     RouterModule.forRoot([
-      { path: '', component: HomeComponent, pathMatch: 'full' },
+      { path: '', redirectTo: '/login', pathMatch: 'full' },
+      { path: 'login', component: LoginComponent },
       { path: 'home', component: HomeComponent },
       { path: 'counter', component: CounterComponent },
       { path: 'fetch-data', component: FetchDataComponent },
-      { path: 'program-manage',component: ProgramManageComponent},
-      { path: 'view-applicants', component: ViewApplicantsComponent},
-      { path: 'sort-applicants', component: SortApplicantsComponent}
+      { path: 'program-manage', component: ProgramManageComponent },
+      { path: 'view-applicants', component: ViewApplicantsComponent },
+      { path: 'sort-applicants', component: SortApplicantsComponent }
     ])
   ],
   providers: [],
