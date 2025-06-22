@@ -23,62 +23,6 @@ taskkill /PID 6276 /F
 win+r services.msc find MYSQL80 start workbench
 ```
 
-
-## SQL Installation
-
-Courses, Entry Requirements, Subjects
-
-```bash
-  INSERT INTO `sam`.`courses` (id, CourseCode, Faculty, FacultyCode, CourseName)
-VALUES
--- Faculty of Computing
-(1, 'UT6481001', 'Faculty of Computing', 'fc', 'Software Engineering'),
-(2, 'UT6481002', 'Faculty of Computing', 'fc', 'Data Engineering'),
-(3, 'UT6481003', 'Faculty of Computing', 'fc', 'Bioinformatics'),
-(4, 'UT6481004', 'Faculty of Computing', 'fc', 'Networking'),
-(5, 'UT6481005', 'Faculty of Computing', 'fc', 'Computer Graphics'),
-
--- Faculty of Mechanical Engineering
-(6, 'UT6521001', 'Faculty of Mechanical Engineering', 'fkm', 'Pure Mechanical Engineering'),
-(7, 'UT6521003', 'Faculty of Mechanical Engineering', 'fkm', 'Manufacturing Engineering'),
-(8, 'UT6521004', 'Faculty of Mechanical Engineering', 'fkm', 'Industrial Engineering'),
-(9, 'UT6525001', 'Faculty of Mechanical Engineering', 'fkm', 'Aerospace Engineering'),
-(10, 'UT6525002', 'Faculty of Mechanical Engineering', 'fkm', 'Automotive Engineering'),
-(11, 'UT6525003', 'Faculty of Mechanical Engineering', 'fkm', 'Offshore Engineering'),
-
--- Faculty of Engineering
-(12, 'UT6522002', 'Faculty of Engineering', 'fke', 'Electrical Engineering'),
-(13, 'UT6523001', 'Faculty of Engineering', 'fke', 'Electronic Engineering'),
-(14, 'UT6523002', 'Faculty of Engineering', 'fke', 'Mechanical Engineering'),
-(15, 'UT6523003', 'Faculty of Engineering', 'fke', 'Biomedical Engineering');
-
-INSERT INTO `sam`.`entryrequirements`
-(`Id`, `Graduate_type`, `Requirement_type`, `Subject`, `Grade`, `Faculty`, `Program_code`)
-VALUES
-(1, 'SPM', 'general', 'Malay', 'C', NULL, NULL),
-(2, 'SPM', 'general', 'English', 'C', NULL, NULL),
-(3, 'STPM', 'general', 'Pengajian Am', 'B', NULL, NULL),
-(4, 'STPM', 'general', 'MUET', '5.0', NULL, NULL),
-(5, 'Matriculation', 'general', 'PNGK', '1.0', NULL, NULL),
-(6, 'Diploma', 'general', 'PNGK', '2.00', NULL, NULL),
-(7, 'Diploma', 'general', 'Malay', '3.65', NULL, NULL),
-(8, 'STPM', 'special', 'Additional Mathematics', 'B-', 'fc', 'UT6481001'),
-(9, 'SPM', 'special', 'Mathematics', 'C', 'fc', 'UT6481001'),
-(10, 'SPM', 'special', 'Additional Mathematics', 'C', 'fc', 'UT6481001'),
-(11, 'STPM', 'special', 'PNGK', '3.67', 'fkm', 'UT6521001'),
-(12, 'STPM', 'special', 'Additional Mathematics', 'B-', 'fkm', 'UT6521001'),
-(13, 'STPM', 'special', 'Physics/Chemistry', 'B-', 'fkm', 'UT6521001');
-
-INSERT INTO `sam`.`subjects`
-(`Category`, `SubjectName`)
-VALUES
-('SPM','Bahasa Melayu'),
-('STPM','Pengajian Am'),
-('Matriculation','Biology'),
-('Diploma','MUET')
-
-```
-    
 ## Packages
 ```bash
 dotnet add package UglyToad.PdfPig --prerelease❌ 
@@ -99,7 +43,6 @@ dotnet add package MailKit
 dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
 
 ```
-
 
 ## Assumptions
 
