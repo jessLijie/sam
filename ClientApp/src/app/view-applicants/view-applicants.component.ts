@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, TemplateRef, ViewChild } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
@@ -66,7 +66,7 @@ export class ViewApplicantsComponent implements OnInit {
   public isModalOpen = false;
   public modalTitle = '';
   public modalContent: any = null;
-  private apiUrl = 'https://wongjie-001-site1.qtempurl.com/api/Application';
+  private apiUrl = 'https://localhost:7108/api/Application';
   // For the add modal:
   public isAddModalOpen = false;
   public isScanModalOpen = false;
@@ -166,6 +166,12 @@ export class ViewApplicantsComponent implements OnInit {
     this.addForm = this.fb.group({
       name: ['', Validators.required],
       preUType: ['', Validators.required],
+      preUPointer: new FormControl(null, [
+        Validators.required,
+        Validators.min(0),
+        Validators.max(4),
+        Validators.pattern(/^\d+(\.\d{1,2})?$/)
+      ]),
       faculty: ['', Validators.required],
       program_code: ['', Validators.required],
       icNumber: ['', Validators.required],
@@ -273,7 +279,7 @@ export class ViewApplicantsComponent implements OnInit {
 
 
   fetchApplicantCounts(): void {
-    this.http.get<any[]>('https://wongjie-001-site1.qtempurl.com/api/Application')
+    this.http.get<any[]>('https://localhost:7108/api/Application')
       .subscribe(applicants => {
         console.log('Fetched applicants:', applicants);
         // Reset counts
@@ -314,7 +320,7 @@ export class ViewApplicantsComponent implements OnInit {
   }
 
   fetchFaculties(): void {
-    this.http.get<Faculty[]>('https://wongjie-001-site1.qtempurl.com/api/Course/faculties')
+    this.http.get<Faculty[]>('https://localhost:7108/api/Course/faculties')
       .subscribe(response => {
         this.faculties = response;
       }, error => {
@@ -324,7 +330,7 @@ export class ViewApplicantsComponent implements OnInit {
 
   fetchCourses(): void {
     this.http
-      .get<{ [key: string]: Program[] }>('https://wongjie-001-site1.qtempurl.com/api/Course/courses')
+      .get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
       .subscribe({
         next: res => {
           this.programs = res;
@@ -342,11 +348,18 @@ export class ViewApplicantsComponent implements OnInit {
       next: (data) => {
         this.modalTitle = data.name + "'s " + data.preUType + " Result";
         try {
-          this.modalContent = JSON.parse(data.preUResult);
+          const parsedResult = JSON.parse(data.preUResult);
+
+          this.modalContent = {
+            preUPointer: data.preUPointer,
+            preUType: data.preUType,
+            name: data.name,
+            preUResultParsed: parsedResult
+          };
         } catch (e) {
           console.error('Error parsing preUResult JSON', e);
-          this.modalContent = data.preUResult;
         }
+        console.log(this.modalContent);
         this.isModalOpen = true;
         this.cdr.markForCheck();
       },
@@ -621,6 +634,9 @@ export class ViewApplicantsComponent implements OnInit {
     }
   }
 
+  get preUPointer() {
+    return this.addForm.get('preUPointer');
+  }
 
   getProgramsForFacultyDropdown(): { code: string; name: string }[] {
     const faculty = this.addForm.get('faculty')?.value;

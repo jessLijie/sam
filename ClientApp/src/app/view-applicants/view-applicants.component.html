@@ -165,8 +165,9 @@
 <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <h2>{{ modalTitle }}</h2>
-    <h3>Personal Info</h3>
+
     <div *ngFor="let app of modalContent.applicants" class="applicant-info">
+      <h3>Personal Info</h3>
       <table class="result-table borderless">
         <tbody>
           <tr>
@@ -176,6 +177,10 @@
           <tr>
             <td><strong>Pre-U Type</strong></td>
             <td>: {{ modalContent.preUType }}</td>
+          </tr>
+          <tr>
+            <td><strong>CGPA</strong></td>
+            <td>: {{ modalContent.preUPointer }}</td>
           </tr>
           <tr>
             <td><strong>Applied Program</strong></td>
@@ -238,6 +243,7 @@
     </div>
 
     <div *ngIf="modalTitle !== 'Applicant Details' && modalContent">
+      <h6 style="text-align: center;">CGPA: {{ modalContent.preUPointer }}</h6>
       <table class="result-table">
         <thead>
           <tr>
@@ -246,7 +252,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of modalContent | keyvalue">
+          <tr *ngFor="let item of modalContent.preUResultParsed | keyvalue">
             <td>{{ item.key }}</td>
             <td>{{ item.value }}</td>
           </tr>
@@ -286,6 +292,22 @@
             <mat-option value="Foundation">Foundation</mat-option>
             <mat-option value="Diploma">Diploma</mat-option>
           </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Pre-U CGPA:</mat-label>
+          <input
+            matInput
+            formControlName="preUPointer"
+            placeholder="Enter CGPA"
+            type="number"
+            step="0.01"
+            min="0"
+            max="4"
+          />
+          <mat-error *ngIf="preUPointer?.hasError('pattern')">
+            Maximum two decimal points allowed
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
@@ -501,6 +523,22 @@
         </mat-form-field>
 
         <mat-form-field appearance="fill">
+          <mat-label>Pre-U CGPA:</mat-label>
+          <input
+            matInput
+            formControlName="preUPointer"
+            placeholder="Enter CGPA"
+            type="number"
+            step="0.01"
+            min="0"
+            max="4"
+          />
+          <mat-error *ngIf="preUPointer?.hasError('pattern')">
+            Maximum two decimal points allowed
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
           <mat-label>Applying for Faculty</mat-label>
           <mat-select formControlName="faculty">
             <mat-option
@@ -643,7 +681,9 @@
       <br /><br />
 
       <!-- Pre-U Results Section (Choose One) -->
-      <h3>Pre-U Results <button
+      <h3>
+        Pre-U Results
+        <button
           mat-icon-button
           type="button"
           matTooltip="Read extraction guide"
@@ -651,7 +691,8 @@
           aria-label="Extraction Info"
         >
           <mat-icon>info</mat-icon>
-        </button></h3>
+        </button>
+      </h3>
 
       <input
         type="file"

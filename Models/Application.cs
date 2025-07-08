@@ -38,6 +38,6 @@ namespace sam.Models
         public DateTime? OperationUpdatedAt { get; set; }
 
         public string? OperationUpdatedBy { get; set; }
-
+        public decimal? PreUPointer { get; set; }
     }
 }

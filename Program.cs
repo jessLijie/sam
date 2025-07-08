@@ -23,6 +23,7 @@ builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 52428800; // 50 MB limit
 });
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", builder =>
@@ -32,22 +33,33 @@ builder.Services.AddCors(options =>
                .AllowAnyHeader();
     });
 });
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var jwtSettings = builder.Configuration.GetSection("Jwt");
+
+    // Ensure the key is long enough (256-bit / 32 bytes)
+    var key = jwtSettings["Key"];
+    if (string.IsNullOrWhiteSpace(key) || key.Length < 32)
     {
-        var jwtSettings = builder.Configuration.GetSection("Jwt");
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSettings["Key"]))
-        };
-    });
+        throw new Exception("JWT Key must be at least 32 characters long.");
+    }
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+    };
+});
 
 builder.Services.AddAuthorization();
 
@@ -56,9 +68,9 @@ var app = builder.Build();
 // Apply migrations (if necessary)
 using (var scope = app.Services.CreateScope())
 {
-    var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+    var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>().IsProduction();
 
-    if (env.IsDevelopment() || env.IsStaging())
+    if (!env)
     {
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         db.Database.Migrate(); // ONLY runs in development or staging
@@ -74,6 +86,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseAuthorization();
 // Enable CORS
 app.UseCors("AllowAll");
 

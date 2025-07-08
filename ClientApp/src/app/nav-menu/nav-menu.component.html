@@ -55,16 +55,21 @@
           </li>
           <li class="nav-item">
             <a
-              class="nav-link text-dark"
+              class="nav-link text-white"
               (click)="logout()"
               style="
                 background-color: #e69305;
                 color: white !important;
                 border-radius: 5px;
                 cursor: pointer;
+                padding: 6px 12px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                transition: background-color 0.3s ease, box-shadow 0.3s ease;
               "
+              onmouseover="this.style.backgroundColor='#d17e01'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.3)'"
+              onmouseout="this.style.backgroundColor='#e69305'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.2)'"
             >
-              <mat-icon>logout</mat-icon>
+            <mat-icon>logout</mat-icon>
               Logout
             </a>
           </li>

@@ -43,7 +43,7 @@ export class HomeComponent {
   ngOnInit() {
     this.fetchCourses();
 
-    this.http.get('https://wongjie-001-site1.qtempurl.com/api/Application/summary').subscribe((data: any) => {
+    this.http.get('https://localhost:7108/api/Application/summary').subscribe((data: any) => {
       this.summaryData = data;
       this.totalApplicants = data.totalApplicants;
       this.approvedApplicants = data.approvedApplicants;
@@ -53,7 +53,7 @@ export class HomeComponent {
   }
 
   fetchCourses(): void {
-    this.http.get<{ [key: string]: Program[] }>('https://wongjie-001-site1.qtempurl.com/api/Course/courses')
+    this.http.get<{ [key: string]: Program[] }>('https://localhost:7108/api/Course/courses')
       .subscribe(response => {
         this.programs = response;
         this.cdr.detectChanges();

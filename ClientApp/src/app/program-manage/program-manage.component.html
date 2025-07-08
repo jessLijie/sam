@@ -1,7 +1,12 @@
 <div class="filter-container">
   <mat-form-field class="custom-mat-form-field" appearance="fill">
-    <mat-label>Select Faculty</mat-label>
-    <mat-select [(value)]="selectedFaculty">
+    <mat-label>
+      Select Faculty to view Special Entry Requirements for each course
+    </mat-label>
+    <mat-select
+      [(value)]="selectedFaculty"
+      (selectionChange)="onFacultyChange()"
+    >
       <mat-option
         *ngFor="let faculty of faculties"
         [value]="faculty.facultyCode"
@@ -10,6 +15,7 @@
       </mat-option>
     </mat-select>
   </mat-form-field>
+
   <button
     mat-icon-button
     class="clear-button"
@@ -35,7 +41,80 @@
   </button>
 </div>
 
-<mat-accordion *ngIf="selectedFaculty">
+<h3 style="text-align: center">
+  UTM's General Entry Requirement for All Applicants
+</h3>
+<table
+  mat-table
+  matSort
+  [dataSource]="generalRequirement"
+  class="mat-elevation-z8"
+  #generalSort="matSort"
+>
+  <ng-container matColumnDef="graduate_type">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+    <td mat-cell *matCellDef="let element">
+      <span
+        class="category-tag"
+        [ngClass]="getCategoryClass(element.graduate_type)"
+      >
+        {{ element.graduate_type }}
+      </span>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="requirement">
+    <th mat-header-cell *matHeaderCellDef>General Requirement</th>
+    <td mat-cell *matCellDef="let element">{{ element.subject }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="grade">
+    <th mat-header-cell *matHeaderCellDef style="width: 30%">Minimum Grade</th>
+    <td mat-cell *matCellDef="let element; let generalRowIndex = index">
+      <ng-container *ngIf="editingRowIndex === generalRowIndex; else gradeView">
+        <input
+          matInput
+          [(ngModel)]="updatedGrade"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="validateGrade($event)"
+          [class.invalid-grade]="!isValidGrade"
+        />
+        <mat-error *ngIf="!isValidGrade">
+          Invalid grade. Allowed: {{ validGrades.join(", ") }}
+        </mat-error>
+      </ng-container>
+      <ng-template #gradeView>{{ element.grade }}</ng-template>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="action">
+    <th mat-header-cell *matHeaderCellDef>Actions</th>
+    <td mat-cell *matCellDef="let element; let rowIndex = index">
+      <button
+        mat-button
+        *ngIf="editingRowIndex === rowIndex; else editButton"
+        (click)="saveChanges(rowIndex)"
+        [disabled]="!isValidGrade"
+      >
+        <mat-icon>check</mat-icon>
+      </button>
+      <ng-template #editButton>
+        <button mat-button (click)="startEditing(rowIndex, element.grade)">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </ng-template>
+      <button mat-button (click)="confirmDelete(element.id)" style="color: red">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+</table>
+
+<!-- <div *ngIf="selectedFaculty">
+<mat-accordion >
   <mat-expansion-panel disabled>
     <mat-expansion-panel-header style="color: #9d9d9d">
       💡 Click to expand and view specific entry requirement
@@ -117,7 +196,7 @@
               <mat-icon>edit</mat-icon>
             </button>
           </ng-template>
-          <button mat-button (click)="confirmDelete(element.id, program.code)">
+          <button mat-button (click)="confirmDelete(element.id, program.code)"  color="warn">
             <mat-icon>delete</mat-icon>
           </button>
         </td>
@@ -128,75 +207,107 @@
     </table>
   </mat-expansion-panel>
 </mat-accordion>
+</div> -->
 
-<table
-  mat-table
-  matSort
-  [dataSource]="generalRequirement"
-  class="mat-elevation-z8"
-  #generalSort="matSort"
->
-  <ng-container matColumnDef="graduate_type">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
-    <td mat-cell *matCellDef="let element">
-      <span
-        class="category-tag"
-        [ngClass]="getCategoryClass(element.graduate_type)"
+<!-- Tabs will only show if a faculty is selected -->
+<div *ngIf="selectedFaculty">
+  <h3 style="text-align: center">UTM's Special Entry Requirement for</h3>
+  <mat-tab-group
+    [(selectedIndex)]="selectedTabIndex"
+    (selectedTabChange)="onTabChange($event)"
+  >
+    <mat-tab
+      *ngFor="let program of getProgramsForFaculty(); let idx = index"
+      [label]="program.code + ' - ' + program.name"
+    >
+      <table
+        mat-table
+        [dataSource]="specialRequirements[program.code]"
+        class="mat-elevation-z8"
       >
-        {{ element.graduate_type }}
-      </span>
-    </td>
-  </ng-container>
+        <!-- Category -->
+        <ng-container matColumnDef="graduate_type">
+          <th mat-header-cell *matHeaderCellDef>Category</th>
+          <td mat-cell *matCellDef="let element">
+            <span
+              class="category-tag"
+              [ngClass]="getCategoryClass(element.graduate_type)"
+            >
+              {{ element.graduate_type }}
+            </span>
+          </td>
+        </ng-container>
 
-  <ng-container matColumnDef="requirement">
-    <th mat-header-cell *matHeaderCellDef>General Requirement</th>
-    <td mat-cell *matCellDef="let element">{{ element.subject }}</td>
-  </ng-container>
+        <!-- Subject -->
+        <ng-container matColumnDef="requirement">
+          <th mat-header-cell *matHeaderCellDef>Special Requirement</th>
+          <td mat-cell *matCellDef="let element">{{ element.subject }}</td>
+        </ng-container>
 
-  <ng-container matColumnDef="grade">
-    <th mat-header-cell *matHeaderCellDef style="width: 30%">Minimum Grade</th>
-    <td mat-cell *matCellDef="let element; let generalRowIndex = index">
-      <ng-container *ngIf="editingRowIndex === generalRowIndex; else gradeView">
-        <input
-          matInput
-          [(ngModel)]="updatedGrade"
-          [ngModelOptions]="{ standalone: true }"
-          (ngModelChange)="validateGrade($event)"
-          [class.invalid-grade]="!isValidGrade"
-        />
-        <mat-error *ngIf="!isValidGrade">
-          Invalid grade. Allowed: {{ validGrades.join(", ") }}
-        </mat-error>
-      </ng-container>
-      <ng-template #gradeView>{{ element.grade }}</ng-template>
-    </td>
-  </ng-container>
+        <!-- Grade -->
+        <ng-container matColumnDef="grade">
+          <th mat-header-cell *matHeaderCellDef style="width: 30%">
+            Minimum Grade
+          </th>
+          <td mat-cell *matCellDef="let element; let rowIndex = index">
+            <ng-container
+              *ngIf="editingSpecialRowIndex === rowIndex; else gradeView"
+            >
+              <input
+                matInput
+                [(ngModel)]="updatedSpecialGrade"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="validateGrade($event)"
+                [class.invalid-grade]="!isValidGrade"
+              />
+              <mat-error *ngIf="!isValidGrade">
+                Invalid grade. Allowed: {{ validGrades.join(", ") }}
+              </mat-error>
+            </ng-container>
+            <ng-template #gradeView>{{ element.grade }}</ng-template>
+          </td>
+        </ng-container>
 
-  <ng-container matColumnDef="action">
-    <th mat-header-cell *matHeaderCellDef>Actions</th>
-    <td mat-cell *matCellDef="let element; let rowIndex = index">
-      <button
-        mat-button
-        *ngIf="editingRowIndex === rowIndex; else editButton"
-        (click)="saveChanges(rowIndex)"
-        [disabled]="!isValidGrade"
-      >
-        <mat-icon>check</mat-icon>
-      </button>
-      <ng-template #editButton>
-        <button mat-button (click)="startEditing(rowIndex, element.grade)">
-          <mat-icon>edit</mat-icon>
-        </button>
-      </ng-template>
-      <button mat-button (click)="confirmDelete(element.id)" style="color: red">
-        <mat-icon>delete</mat-icon>
-      </button>
-    </td>
-  </ng-container>
+        <!-- Actions -->
+        <ng-container matColumnDef="action">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let element; let rowIndex = index">
+            <button
+              mat-button
+              *ngIf="editingSpecialRowIndex === rowIndex; else editButton"
+              (click)="saveSpecialChanges(program.code, rowIndex)"
+              [disabled]="!isValidGrade"
+            >
+              <mat-icon>check</mat-icon>
+            </button>
 
-  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-</table>
+            <ng-template #editButton>
+              <button
+                mat-button
+                (click)="
+                  startEditingSpecial(program.code, rowIndex, element.grade)
+                "
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+            </ng-template>
+
+            <button
+              mat-button
+              (click)="confirmDelete(element.id, program.code)"
+              color="warn"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </mat-tab>
+  </mat-tab-group>
+</div>
 
 <!-- Entry Requirement Edit -->
 <div *ngIf="isCreateModalOpen" class="modal-overlay">

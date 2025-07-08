@@ -93,6 +93,7 @@ namespace sam.Controllers
                 SpmResult = input.SpmResult,
                 PreUResult = input.PreUResult,
                 PreUType = input.PreUType,
+                PreUPointer = input.PreUPointer,
                 AppliedProgram = input.Program_code,
                 ApplicationStatus = "pending",
                 CreatedAt = DateTime.UtcNow.AddHours(8)

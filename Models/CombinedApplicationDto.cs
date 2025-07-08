@@ -5,6 +5,9 @@ public class CombinedApplicationDto
     public string? SpmResult { get; set; }    // JSON string
     public string? PreUResult { get; set; }     // JSON string
     public string? PreUType { get; set; }
+    
+    public decimal? PreUPointer { get; set; }
+
     public string? Program_code { get; set; }   // This will be saved into the AppliedProgram column
 
     // Applicant properties

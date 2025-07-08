@@ -14,6 +14,7 @@ import { ProgramManageComponent } from './program-manage/program-manage.componen
 import { SortApplicantsComponent } from './sort-applicants/sort-applicants.component';
 import { ViewApplicantsComponent } from './view-applicants/view-applicants.component';
 import { LoginComponent } from './login/login.component';
+import { AuthGuard } from 'src/auth/guard';
 
 @NgModule({
   declarations: [
@@ -32,12 +33,12 @@ import { LoginComponent } from './login/login.component';
     RouterModule.forRoot([
       { path: '', redirectTo: '/login', pathMatch: 'full' },
       { path: 'login', component: LoginComponent },
-      { path: 'home', component: HomeComponent },
-      { path: 'counter', component: CounterComponent },
-      { path: 'fetch-data', component: FetchDataComponent },
-      { path: 'program-manage', component: ProgramManageComponent },
-      { path: 'view-applicants', component: ViewApplicantsComponent },
-      { path: 'sort-applicants', component: SortApplicantsComponent }
+      { path: 'home', component: HomeComponent ,canActivate: [AuthGuard]},
+      { path: 'counter', component: CounterComponent , canActivate: [AuthGuard]},
+      { path: 'fetch-data', component: FetchDataComponent , canActivate: [AuthGuard]},
+      { path: 'program-manage', component: ProgramManageComponent, canActivate: [AuthGuard] },
+      { path: 'view-applicants', component: ViewApplicantsComponent , canActivate: [AuthGuard]},
+      { path: 'sort-applicants', component: SortApplicantsComponent , canActivate: [AuthGuard]}
     ])
   ],
   providers: [],
